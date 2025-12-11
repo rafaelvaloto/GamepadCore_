@@ -75,6 +75,7 @@ GamepadCore/
     ├── Unreal/                             # Example: How to wrap Core for Unreal
     ├── Unity/                              # Example: C++ to C# Marshaling
     └── Godot/                              # Example: GDExtension binding
+    └── o3DE/                               # Example: o3DE binding
 ```
 
 ## 🛠️ Usage Example (Concept)
