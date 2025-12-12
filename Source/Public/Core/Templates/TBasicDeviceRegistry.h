@@ -2,10 +2,11 @@
 // Created for: GamepadCore - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 #pragma once
-#include "Core/Interfaces/IDeviceRegistry.h"
-#include "Core/Interfaces/IPlatformHardwareInfo.h"
-#include "Implementations/Libraries/DualSense/DualSenseLibrary.h"
-#include "Implementations/Libraries/DualShock/DualShockLibrary.h"
+#include "GamepadCore/Source/Public/Core/Interfaces/IDeviceRegistry.h"
+#include "GamepadCore/Source/Public/Core/Interfaces/IPlatformHardwareInfo.h"
+#include "GamepadCore/Source/Public/Core/Types/ECoreGamepad.h"
+#include "GamepadCore/Source/Public/Implementations/Libraries/DualSense/DualSenseLibrary.h"
+#include "GamepadCore/Source/Public/Implementations/Libraries/DualShock/DualShockLibrary.h"
 #include <ranges>
 #include <vector>
 
@@ -15,47 +16,36 @@ namespace GamepadCore
 	concept DeviceRegistryPolicy = requires(T t)
 	{
 		typename T::EngineIdType;
+
 		{
 			t.AllocEngineDevice()
 		} -> std::same_as<typename T::EngineIdType>;
+
 		{
-			t.DisconnectDevice(T::EngineIdType)
+			t.DisconnectDevice(std::declval<typename T::EngineIdType>())
 		} -> std::same_as<void>;
+
 		{
-			t.DispathNewGamepad(T::EngineIdType)
+			t.DispatchNewGamepad(std::declval<typename T::EngineIdType>())
 		} -> std::same_as<void>;
-		{t.Get(T::EngineIdType)};
-	};
+	}
 
 	template<typename DeviceRegistryPolicy>
 	class TBasicDeviceRegistry : public IDeviceRegistry
 	{
 		DeviceRegistryPolicy Policy;
-		std::unordered_map<std::string, std::int32_t> HistoryDevices;
-		std::unordered_map<std::string, std::int32_t> KnownDevicePaths;
-		std::unordered_map<std::int32_t, std::shared_ptr<ISonyGamepad>> LibraryInstances;
+		using EngineIdType = typename DeviceRegistryPolicy::EngineIdType;
+		std::unordered_map<std::string, typename DeviceRegistryPolicy::EngineIdType> KnownDevicePaths;
+		std::unordered_map<std::string, typename DeviceRegistryPolicy::EngineIdType> HistoryDevices;
+		std::unordered_map<typename DeviceRegistryPolicy::EngineIdType, std::shared_ptr<ISonyGamepad>, typename DeviceRegistryPolicy::Hasher> LibraryInstances;
 
 		float TimeAccumulator = 0.0f;
 		const float DetectionInterval = 2.0f;
 
 	public:
-		~TBasicDeviceRegistry() override
-		{
-			std::vector<std::int32_t> WatcherKeys;
-			WatcherKeys.reserve(LibraryInstances.size());
+		virtual ~TBasicDeviceRegistry() override = default;
 
-			for (const auto& [Key, _] : LibraryInstances)
-			{
-				WatcherKeys.push_back(Key);
-			}
-
-			for (const auto& ControllerId : WatcherKeys)
-			{
-				TBasicDeviceRegistry<DeviceRegistryPolicy>::RemoveLibraryInstance(ControllerId);
-			}
-		}
-
-		void PlugPlay(float DeltaTime) override
+		virtual void PlugAndPlay(float DeltaTime) override
 		{
 			TimeAccumulator += DeltaTime;
 			if (TimeAccumulator < DetectionInterval)
@@ -101,13 +91,33 @@ namespace GamepadCore
 					Context.Output = FOutputContext();
 					if (IPlatformHardwareInfo::Get().CreateHandle(&Context))
 					{
-						CreateLibraryInstance(Context);
+						CreateLibrary(Context);
 					}
 				}
 			}
 		}
 
-		void CreateLibraryInstance(FDeviceContext& Context) override
+		ISonyGamepad* GetLibrary(EngineIdType DeviceId)
+		{
+			if (LibraryInstances.contains(DeviceId))
+			{
+				return LibraryInstances[DeviceId].get();
+			}
+			return nullptr;
+		}
+
+	private:
+		void RemoveLibraryInstance(EngineIdType DeviceId)
+		{
+			Policy.DisconnectDevice(DeviceId);
+			if (LibraryInstances.contains(DeviceId))
+			{
+				LibraryInstances[DeviceId]->ShutdownLibrary();
+				LibraryInstances.erase(DeviceId);
+			}
+		}
+
+		void CreateLibrary(FDeviceContext& Context)
 		{
 			std::shared_ptr<ISonyGamepad> Gamepad = nullptr;
 			if (Context.DeviceType == EDSDeviceType::DualSense || Context.DeviceType == EDSDeviceType::DualSenseEdge)
@@ -128,7 +138,7 @@ namespace GamepadCore
 			if (!HistoryDevices.contains(Context.Path))
 			{
 				auto NewDevice = Policy.AllocEngineDevice();
-				HistoryDevices.insert(Context.Path, NewDevice);
+				HistoryDevices[Context.Path] = NewDevice;
 			}
 
 			if (!Gamepad->Initialize(Context))
@@ -139,30 +149,8 @@ namespace GamepadCore
 			auto DeviceId = HistoryDevices[Context.Path];
 			KnownDevicePaths[Context.Path] = DeviceId;
 			LibraryInstances[DeviceId] = Gamepad;
-			Policy.DispathNewGamepad(DeviceId);
-		}
 
-		void RemoveLibraryInstance(const CoreDeviceId& DeviceId) override
-		{
-			Policy.DisconnectDevice(DeviceId);
-			if (LibraryInstances.contains(DeviceId))
-			{
-				LibraryInstances[DeviceId]->ShutdownLibrary();
-				LibraryInstances.erase(DeviceId);
-			}
+			Policy.DispatchNewGamepad(DeviceId);
 		}
-
-		ISonyGamepad* GetLibraryInstance(const CoreDeviceId& DeviceId) override
-		{
-			return LibraryInstances[DeviceId].get();
-		}
-
-		// Acesso para o Adapter pegar o objeto real
-		auto GetGamepad(typename DeviceRegistryPolicy::EngineIdType Id)
-		{
-			return Policy.Get(Id);
-		}
-
-		DeviceRegistryPolicy::EngineIdType& GetPolicy() { return Policy; }
 	};
 } // namespace GamepadCore

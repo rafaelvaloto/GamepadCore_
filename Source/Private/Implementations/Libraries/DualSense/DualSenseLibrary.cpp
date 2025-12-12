@@ -3,16 +3,16 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 
-#include "Implementations/Libraries/DualSense/DualSenseLibrary.h"
-#include "Core/Algorithms/MadgwickAhrs.h"
-#include "Core/Interfaces/IPlatformHardwareInfo.h"
-#include "Core/Types/ECoreGamepad.h"
-#include "Core/Types/Structs/Context/DeviceContext.h"
-#include "Implementations/Utils/GamepadInput.h"
-#include "Implementations/Utils/GamepadOutput.h"
-#include "Implementations/Utils/GamepadSensors.h"
-#include "Implementations/Utils/GamepadTouch.h"
-#include "Implementations/Utils/GamepadTrigger.h"
+#include "GamepadCore/Source/Public/Implementations/Libraries/DualSense/DualSenseLibrary.h"
+#include "GamepadCore/Source/Public/Core/Algorithms/MadgwickAhrs.h"
+#include "GamepadCore/Source/Public/Core/Interfaces/IPlatformHardwareInfo.h"
+#include "GamepadCore/Source/Public/Core/Types/ECoreGamepad.h"
+#include "GamepadCore/Source/Public/Core/Types/Structs/Context/DeviceContext.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadInput.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadOutput.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadSensors.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadTouch.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadTrigger.h"
 
 using namespace FDualSenseTriggerComposer;
 

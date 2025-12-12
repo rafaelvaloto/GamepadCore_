@@ -3,11 +3,11 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 
-#include "Implementations/Libraries/DualShock/DualShockLibrary.h"
-#include "Core/Interfaces/IPlatformHardwareInfo.h"
-#include "Core/Types/ECoreGamepad.h"
-#include "Implementations/Utils/GamepadInput.h"
-#include "Implementations/Utils/GamepadOutput.h"
+#include "GamepadCore/Source/Public/Implementations/Libraries/DualShock/DualShockLibrary.h"
+#include "GamepadCore/Source/Public/Core/Interfaces/IPlatformHardwareInfo.h"
+#include "GamepadCore/Source/Public/Core/Types/ECoreGamepad.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadInput.h"
+#include "GamepadCore/Source/Public/Implementations/Utils/GamepadOutput.h"
 
 bool FDualShockLibrary::Initialize(const FDeviceContext& Context)
 {

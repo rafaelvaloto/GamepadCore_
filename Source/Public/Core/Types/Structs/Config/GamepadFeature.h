@@ -4,7 +4,7 @@
 // Targets: Windows, Linux, macOS.
 
 #pragma once
-#include "Core/Types/DSCoreTypes.h"
+#include "GamepadCore/Source/Public/Core/Types/DSCoreTypes.h"
 
 using namespace DSCoreTypes;
 /**

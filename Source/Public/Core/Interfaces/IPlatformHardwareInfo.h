@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Types/DSCoreTypes.h"
-#include "Core/Types/Structs/Context/DeviceContext.h"
+#include "GamepadCore/Source/Public/Core/Types/DSCoreTypes.h"
+#include "GamepadCore/Source/Public/Core/Types/Structs/Context/DeviceContext.h"
 
 #define SONY_ (PLATFORM_PS4 || PLATFORM_PS5)
 
@@ -52,11 +52,11 @@ public:
 	 * interface to act as the global instance for managing platform-specific hardware
 	 * operations. It replaces any previously set instance with the provided one.
 	 *
-	 * @param Instance A unique pointer to the new implementation of IPlatformHardwareInfo
+	 * @param InPlatform A unique pointer to the new implementation of IPlatformHardwareInfo
 	 *                 that will serve as the global platform hardware manager instance.
 	 *                 Ownership of the instance is transferred to the class.
 	 */
-	static void SetInstance(std::unique_ptr<IPlatformHardwareInfo> Instance);
+	static void SetInstance(std::unique_ptr<IPlatformHardwareInfo> InPlatform);
 	/**
 	 * Virtual destructor for the IIPlatformHardwareInfo.
 	 *

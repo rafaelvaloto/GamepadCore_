@@ -3,7 +3,7 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 
-#include "Core/Algorithms/MadgwickAhrs.h"
+#include "GamepadCore/Source/Public/Core/Algorithms/MadgwickAhrs.h"
 
 FMadgwickAhrs::FMadgwickAhrs(const float Beta)
     : Beta(Beta)

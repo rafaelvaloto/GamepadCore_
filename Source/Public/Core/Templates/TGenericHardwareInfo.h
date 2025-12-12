@@ -3,7 +3,8 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 #pragma once
-#include "Core/Interfaces/IPlatformHardwareInfo.h"
+#include "GamepadCore/Source/Public/Core/Interfaces/IPlatformHardwareInfo.h"
+#include "GamepadCore/Source/Public/Core/Types/Structs/Context/DeviceContext.h"
 
 namespace GamepadCore
 {
@@ -33,16 +34,10 @@ namespace GamepadCore
 	template<typename THardwarePolicy>
 	class TGenericHardwareInfo : public IPlatformHardwareInfo
 	{
-	private:
 		THardwarePolicy Policy;
 
 	public:
 		~TGenericHardwareInfo() override = default;
-
-		template<typename... Args>
-		explicit TGenericHardwareInfo(Args&&... args)
-		    : Policy(std::forward<Args>(args)...)
-		{}
 
 		void Read(FDeviceContext* Context) override
 		{

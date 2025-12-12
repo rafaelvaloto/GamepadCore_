@@ -2,9 +2,9 @@
 // Created for: WindowsDualShock_ds5w - Plugin to support DualShock controller
 // on Windows. Planned Release Year: 2025
 #pragma once
-#include "Core/Types/DSCoreTypes.h"
-#include "Core/Types/Structs/Context/DeviceContext.h"
-#include "Implementations/Libraries/Base/SonyGamepadAbstract.h"
+#include "GamepadCore/Source/Public/Core/Types/DSCoreTypes.h"
+#include "GamepadCore/Source/Public/Core/Types/Structs/Context/DeviceContext.h"
+#include "GamepadCore/Source/Public/Implementations/Libraries/Base/SonyGamepadAbstract.h"
 
 class FDualShockLibrary : public SonyGamepadAbstract
 {
