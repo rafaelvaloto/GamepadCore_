@@ -28,7 +28,7 @@ namespace GamepadCore
 		{
 			t.DispatchNewGamepad(std::declval<typename T::EngineIdType>())
 		} -> std::same_as<void>;
-	};
+	}
 
 	template<typename DeviceRegistryPolicy>
 	class TBasicDeviceRegistry : public IDeviceRegistry
