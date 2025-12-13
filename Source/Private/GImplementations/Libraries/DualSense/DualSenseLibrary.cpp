@@ -4,6 +4,9 @@
 // Targets: Windows, Linux, macOS.
 
 #include "GImplementations/Libraries/DualSense/DualSenseLibrary.h"
+
+#include <thread>
+
 #include "GCore/Algorithms/MadgwickAhrs.h"
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Types/ECoreGamepad.h"
