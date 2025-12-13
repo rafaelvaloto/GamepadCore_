@@ -35,7 +35,6 @@ The project’s primary goal is to **decouple hardware communication and device 
 
 **This means you can integrate GamepadCore into *any* game engine or C++ application that requires fine-grained control over input devices.**
 
----
 
 ## 🚀 Key Features
 
@@ -52,7 +51,6 @@ The project’s primary goal is to **decouple hardware communication and device 
 * **🏎️ Zero-Cost Abstraction**
     * Heavy use of modern C++ templates ensures that policy resolution happens at **compile-time**, providing maximum performance with no runtime overhead for abstractions.
 
----
 
 ## 🛠️ Architecture and Structure
 
@@ -109,7 +107,6 @@ void MyApplication::GameLoop(float DeltaTime)
     // ... Your game logic here
 }
 ```
-    
     
 
 ### 3. Interacting with the Gamepad
@@ -226,16 +223,6 @@ void FreeEngineDevice(CoreDeviceId CoreId, EngineIdType EngineId)
     EngineInputSystem::RemoveDevice(EngineId);
 }
 ```
-
-## 🤝 Integration & Adapters
-
-The `Adapters/` directory contains **reference implementations** and examples. These files are **not** compiled with the core library but serve as a guide on how to bridge `GamepadCore` to your target engine.
-
-* **Unreal Engine:** Examples showing how to map `FInputDeviceId` and `CoreDelegates`.
-* **Unity:** Examples of a Native Plugin Interface with C# callbacks.
-* **Godot:** GDExtension reference code.
-
-You are encouraged to copy these adapters into your project and modify them to suit your specific architectural needs.
 
 ## 🧑‍💻 Contributing (Build & sanity checks)
 
