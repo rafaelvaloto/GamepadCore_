@@ -23,12 +23,8 @@ IPlatformHardwareInfo& IPlatformHardwareInfo::Get()
 	// PlatformInfoInstance = std::make_unique<FMacDeviceInfo>();
 #endif
 
-	// Se mesmo assim falhou (plataforma desconhecida e sem injeção)
 	if (!PlatformInfoInstance)
 	{
-		// Aqui você pode decidir: lançar exceção ou retornar uma instância
-		// NullObject que não faz nada throw std::runtime_error("Platform Hardware
-		// Info not initialized!");
 	}
 
 	return *PlatformInfoInstance;
