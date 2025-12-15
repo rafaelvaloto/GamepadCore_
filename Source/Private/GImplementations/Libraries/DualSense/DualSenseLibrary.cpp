@@ -7,7 +7,6 @@
 
 #include <thread>
 
-#include "GCore/Algorithms/MadgwickAhrs.h"
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Types/ECoreGamepad.h"
 #include "GCore/Types/Structs/Context/DeviceContext.h"
@@ -135,41 +134,10 @@ void FDualSenseLibrary::UpdateInput(float Delta)
 		DSCoreTypes::DSVector3D AccelG;
 
 		using namespace FGamepadSensors;
-		ProcessMotionData(&Context->Buffer[Padding], Context->Calibration, GyroDeg,
-		                  AccelG);
+		ProcessMotionData(&Context->Buffer[Padding], Context->Calibration, GyroDeg,AccelG);
 
-		if (IsResetGyroscope())
-		{
-			MadgwickFilter.Reset();
-		}
-		constexpr float GToMSq = GRAVITY_MS2;
-		constexpr float DegToRad = 3.1415926535f / 180.0f;
-		const DSCoreTypes::DSVector3D AccelRad = {AccelG.X * GToMSq, AccelG.Y * GToMSq,
-		                                          AccelG.Z * GToMSq};
-		const DSCoreTypes::DSVector3D GyroRad = {GyroDeg.X * DegToRad, GyroDeg.Y * DegToRad,
-		                                         GyroDeg.Z * DegToRad}; // deg/s -> rad/s
-		MadgwickFilter.UpdateImu(GyroRad.Z, GyroRad.Y, -GyroRad.X, AccelRad.Z,
-		                         AccelRad.Y, -AccelRad.X, Delta);
-
-		float qw, qx, qy, qz;
-		MadgwickFilter.GetQuaternion(qw, qx, qy, qz);
-
-		constexpr DSCoreTypes::DSQuat RotX180(1.0f, 0.0f, 0.0f, 0.0f);
-		const DSCoreTypes::DSQuat RawQuat(qx, qy, qz, qw);
-		const DSCoreTypes::DSQuat SensorQuat = RotX180 * RawQuat;
-
-		InputToFill->Gyroscope.X = GyroDeg.X;
-		InputToFill->Gyroscope.Y = GyroDeg.Z;
-		InputToFill->Gyroscope.Y = GyroDeg.Y;
-		InputToFill->Accelerometer.X = AccelG.X;
-		InputToFill->Accelerometer.Y = AccelG.Z;
-		InputToFill->Accelerometer.Y = AccelG.Y;
-		InputToFill->Gravity = RawQuat.GetUpVector();
-
-		auto [Pitch, Yaw, Roll] = SensorQuat.ToRotator();
-		InputToFill->Tilt.X = Roll;
-		InputToFill->Tilt.Y = Yaw;
-		InputToFill->Tilt.Z = Pitch;
+		InputToFill->Gyroscope = GyroDeg;
+		InputToFill->Accelerometer = AccelG;
 	}
 
 	Context->SwapInputBuffers();

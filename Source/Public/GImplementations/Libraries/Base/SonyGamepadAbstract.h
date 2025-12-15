@@ -3,7 +3,6 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 #pragma once
-#include "GCore/Algorithms/MadgwickAhrs.h"
 #include "GCore/Interfaces/ISonyGamepad.h"
 #include "GCore/Types/DSCoreTypes.h"
 #include "GCore/Types/ECoreGamepad.h"
@@ -168,31 +167,8 @@ public:
 	 */
 	void SetVibration(std::uint8_t LeftRumble, std::uint8_t RightRumble) override {}
 
-	/**
-	 * @class FMadgwickAhrs
-	 * @brief Implements the Madgwick filter algorithm for sensor fusion in
-	 * orientation tracking.
-	 *
-	 * The FMadgwickAhrs class is designed to process data from an IMU (Inertial
-	 * Measurement Unit), applying the Madgwick filter algorithm to estimate
-	 * orientation (roll, pitch, and yaw). It fuses accelerometer, gyroscope, and
-	 * optionally magnetometer data to provide reliable orientation estimations.
-	 *
-	 * This class is commonly utilized in applications requiring real-time
-	 * orientation tracking, such as motion sensing, virtual reality systems, and
-	 * robotics.
-	 *
-	 * @details The algorithm is specifically optimized for low computational
-	 * overhead while maintaining accurate results. It is well-suited for embedded
-	 * systems or devices with constrained processing resources. Using this class,
-	 * applications can achieve smooth and responsive 6-DOF (Degrees of Freedom)
-	 * motion and orientation tracking.
-	 */
-	FMadgwickAhrs MadgwickFilter;
-
 	SonyGamepadAbstract()
-	    : MadgwickFilter(0.8)
-	    , bEnableTouch(false)
+	    : bEnableTouch(false)
 	    , bEnableGesture(false)
 	    , bHasPhoneConnected(false)
 	    , BatteryLevel(0)

@@ -50,14 +50,6 @@ enum class EDSGamepadHand : std::uint8_t
 	AnyHand
 };
 
-enum class EDSTouchInteraction : std::uint8_t
-{
-	None,
-	Swipe,
-	Zoom,
-	Scroll
-};
-
 enum class EDSDeviceType : std::uint8_t
 {
 	DualSense,

@@ -60,7 +60,7 @@
 struct FInputContext
 {
 	// temporary
-	float AnalogDeadZone = 0.09f;
+	float AnalogDeadZone = 0.08f;
 
 	// Analogs
 	DSCoreTypes::DSVector2D LeftAnalog = {0, 0};
@@ -76,30 +76,13 @@ struct FInputContext
 	// touch
 	std::int32_t TouchId = 0;
 	std::int32_t TouchFingerCount = 0;
-
-	// Scroll (Flick)
-	double CurrentTime = 0.0;
-	double TouchStartTime = 0.0;
-	bool bIsTouching = false;
-	bool bWasTouchDown = false;
-
-	float DirectionAngle = 0.0f;
 	std::uint8_t DirectionRaw = 0;
 
-	DSCoreTypes::DSVector2D P1_Current = {0, 0};
-	DSCoreTypes::DSVector2D P1_Last = {0, 0};
-
-	DSCoreTypes::DSVector2D P2_Current = {0, 0};
-	DSCoreTypes::DSVector2D P2_Last = {0, 0};
-
-	float ZoomDelta = 0.0f;
-	DSCoreTypes::DSVector2D SwipeVector = {0, 0};
-	DSCoreTypes::DSVector2D ScrollVelocity = {0, 0};
+	bool bIsTouching = false;
 
 	DSCoreTypes::DSVector2D TouchRadius = {0, 0};
 	DSCoreTypes::DSVector2D TouchPosition = {0, 0};
 	DSCoreTypes::DSVector2D TouchRelative = {0, 0};
-	EDSTouchInteraction TouchInteraction = EDSTouchInteraction::None;
 
 	// Buttons
 	bool bCross;
