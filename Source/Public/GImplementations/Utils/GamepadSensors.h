@@ -11,65 +11,65 @@ namespace FGamepadSensors
 	                                        FGamepadCalibration& OutCalibration)
 	{
 		auto GetLE16 = [](const std::uint8_t* Data) -> std::int16_t {
-	       return static_cast<std::int16_t>(Data[0] | (Data[1] << 8));
-	    };
+			return static_cast<std::int16_t>(Data[0] | (Data[1] << 8));
+		};
 
-	    // Todos agora são int16_t
-	    const std::int16_t GyroPitchBias = GetLE16(&Buffer[1]);
-	    const std::int16_t GyroYawBias   = GetLE16(&Buffer[3]);
-	    const std::int16_t GyroRollBias  = GetLE16(&Buffer[5]);
+		// Todos agora são int16_t
+		const std::int16_t GyroPitchBias = GetLE16(&Buffer[1]);
+		const std::int16_t GyroYawBias = GetLE16(&Buffer[3]);
+		const std::int16_t GyroRollBias = GetLE16(&Buffer[5]);
 
-	    const std::int16_t GyroPitchPlus  = GetLE16(&Buffer[7]);
-	    const std::int16_t GyroPitchMinus = GetLE16(&Buffer[9]);
-	    const std::int16_t GyroYawPlus    = GetLE16(&Buffer[11]);
-	    const std::int16_t GyroYawMinus   = GetLE16(&Buffer[13]);
-	    const std::int16_t GyroRollPlus   = GetLE16(&Buffer[15]);
-	    const std::int16_t GyroRollMinus  = GetLE16(&Buffer[17]);
+		const std::int16_t GyroPitchPlus = GetLE16(&Buffer[7]);
+		const std::int16_t GyroPitchMinus = GetLE16(&Buffer[9]);
+		const std::int16_t GyroYawPlus = GetLE16(&Buffer[11]);
+		const std::int16_t GyroYawMinus = GetLE16(&Buffer[13]);
+		const std::int16_t GyroRollPlus = GetLE16(&Buffer[15]);
+		const std::int16_t GyroRollMinus = GetLE16(&Buffer[17]);
 
-	    const std::int16_t GyroSpeedPlus  = GetLE16(&Buffer[19]);
-	    const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
+		const std::int16_t GyroSpeedPlus = GetLE16(&Buffer[19]);
+		const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
 
-	    const std::int16_t AccelXPlus  = GetLE16(&Buffer[23]);
-	    const std::int16_t AccelXMinus = GetLE16(&Buffer[25]);
-	    const std::int16_t AccelYPlus  = GetLE16(&Buffer[27]);
-	    const std::int16_t AccelYMinus = GetLE16(&Buffer[29]);
-	    const std::int16_t AccelZPlus  = GetLE16(&Buffer[31]);
-	    const std::int16_t AccelZMinus = GetLE16(&Buffer[33]);
+		const std::int16_t AccelXPlus = GetLE16(&Buffer[23]);
+		const std::int16_t AccelXMinus = GetLE16(&Buffer[25]);
+		const std::int16_t AccelYPlus = GetLE16(&Buffer[27]);
+		const std::int16_t AccelYMinus = GetLE16(&Buffer[29]);
+		const std::int16_t AccelZPlus = GetLE16(&Buffer[31]);
+		const std::int16_t AccelZMinus = GetLE16(&Buffer[33]);
 
-	    // Gyro Biases (Cuidado: Você tinha código duplicado aqui, limpei)
-	    OutCalibration.GyroBiasX = static_cast<float>(GyroPitchBias);
-	    OutCalibration.GyroBiasY = static_cast<float>(GyroYawBias);
-	    OutCalibration.GyroBiasZ = static_cast<float>(GyroRollBias);
+		// Gyro Biases (Cuidado: Você tinha código duplicado aqui, limpei)
+		OutCalibration.GyroBiasX = static_cast<float>(GyroPitchBias);
+		OutCalibration.GyroBiasY = static_cast<float>(GyroYawBias);
+		OutCalibration.GyroBiasZ = static_cast<float>(GyroRollBias);
 
-	    // Fatores do Gyro
-	    // Usamos float para garantir precisão na soma antes da divisão
-	    const float Speed2x = static_cast<float>(GyroSpeedPlus + GyroSpeedMinus);
+		// Fatores do Gyro
+		// Usamos float para garantir precisão na soma antes da divisão
+		const float Speed2x = static_cast<float>(GyroSpeedPlus + GyroSpeedMinus);
 
-	    // A logica ABS funciona melhor agora que são int16
-	    float DenomX = static_cast<float>(std::abs(GyroPitchPlus - GyroPitchBias) + std::abs(GyroPitchMinus - GyroPitchBias));
-	    OutCalibration.GyroFactorX = (DenomX != 0.0f) ? (Speed2x / DenomX) : 1.0f;
+		// A logica ABS funciona melhor agora que são int16
+		float DenomX = static_cast<float>(std::abs(GyroPitchPlus - GyroPitchBias) + std::abs(GyroPitchMinus - GyroPitchBias));
+		OutCalibration.GyroFactorX = (DenomX != 0.0f) ? (Speed2x / DenomX) : 1.0f;
 
-	    float DenomY = static_cast<float>(std::abs(GyroYawPlus - GyroYawBias) + std::abs(GyroYawMinus - GyroYawBias));
-	    OutCalibration.GyroFactorY = (DenomY != 0.0f) ? (Speed2x / DenomY) : 1.0f;
+		float DenomY = static_cast<float>(std::abs(GyroYawPlus - GyroYawBias) + std::abs(GyroYawMinus - GyroYawBias));
+		OutCalibration.GyroFactorY = (DenomY != 0.0f) ? (Speed2x / DenomY) : 1.0f;
 
-	    float DenomZ = static_cast<float>(std::abs(GyroRollPlus - GyroRollBias) + std::abs(GyroRollMinus - GyroRollBias));
-	    OutCalibration.GyroFactorZ = (DenomZ != 0.0f) ? (Speed2x / DenomZ) : 1.0f;
+		float DenomZ = static_cast<float>(std::abs(GyroRollPlus - GyroRollBias) + std::abs(GyroRollMinus - GyroRollBias));
+		OutCalibration.GyroFactorZ = (DenomZ != 0.0f) ? (Speed2x / DenomZ) : 1.0f;
 
-	    // Acc X
-	    // IMPORTANTE: Agora (XPlus - XMinus) fará a conta correta: ex: 8192 - (-8192) = 16384
-	    const float RangeX = static_cast<float>(AccelXPlus - AccelXMinus);
-	    OutCalibration.AccelBiasX = (AccelXPlus + AccelXMinus) / 2.0f; // Bias agora será próximo de 0
-	    OutCalibration.AccelFactorX = (RangeX != 0.0f) ? (2.0f / RangeX) : 1.0f;
+		// Acc X
+		// IMPORTANTE: Agora (XPlus - XMinus) fará a conta correta: ex: 8192 - (-8192) = 16384
+		const float RangeX = static_cast<float>(AccelXPlus - AccelXMinus);
+		OutCalibration.AccelBiasX = (AccelXPlus + AccelXMinus) / 2.0f; // Bias agora será próximo de 0
+		OutCalibration.AccelFactorX = (RangeX != 0.0f) ? (2.0f / RangeX) : 1.0f;
 
-	    // Acc Y
-	    const float RangeY = static_cast<float>(AccelYPlus - AccelYMinus);
-	    OutCalibration.AccelBiasY = (AccelYPlus + AccelYMinus) / 2.0f;
-	    OutCalibration.AccelFactorY = (RangeY != 0.0f) ? (2.0f / RangeY) : 1.0f;
+		// Acc Y
+		const float RangeY = static_cast<float>(AccelYPlus - AccelYMinus);
+		OutCalibration.AccelBiasY = (AccelYPlus + AccelYMinus) / 2.0f;
+		OutCalibration.AccelFactorY = (RangeY != 0.0f) ? (2.0f / RangeY) : 1.0f;
 
-	    // Acc Z
-	    const float RangeZ = static_cast<float>(AccelZPlus - AccelZMinus);
-	    OutCalibration.AccelBiasZ = (AccelZPlus + AccelZMinus) / 2.0f;
-	    OutCalibration.AccelFactorZ = (RangeZ != 0.0f) ? (2.0f / RangeZ) : 1.0f;
+		// Acc Z
+		const float RangeZ = static_cast<float>(AccelZPlus - AccelZMinus);
+		OutCalibration.AccelBiasZ = (AccelZPlus + AccelZMinus) / 2.0f;
+		OutCalibration.AccelFactorZ = (RangeZ != 0.0f) ? (2.0f / RangeZ) : 1.0f;
 	}
 
 	inline void ProcessMotionData(const std::uint8_t* Buffer,

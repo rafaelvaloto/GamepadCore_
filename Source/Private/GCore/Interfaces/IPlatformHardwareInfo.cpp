@@ -6,7 +6,7 @@
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 
 std::unique_ptr<IPlatformHardwareInfo>
-	IPlatformHardwareInfo::PlatformInfoInstance = nullptr;
+    IPlatformHardwareInfo::PlatformInfoInstance = nullptr;
 
 IPlatformHardwareInfo& IPlatformHardwareInfo::Get()
 {
@@ -14,7 +14,7 @@ IPlatformHardwareInfo& IPlatformHardwareInfo::Get()
 }
 
 void IPlatformHardwareInfo::SetInstance(
-	std::unique_ptr<IPlatformHardwareInfo> InPlatform)
+    std::unique_ptr<IPlatformHardwareInfo> InPlatform)
 {
 	PlatformInfoInstance = std::move(InPlatform);
 }

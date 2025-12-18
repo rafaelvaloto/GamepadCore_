@@ -4,9 +4,6 @@
 // Targets: Windows, Linux, macOS.
 
 #include "GImplementations/Libraries/DualSense/DualSenseLibrary.h"
-
-#include <thread>
-
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Types/ECoreGamepad.h"
 #include "GCore/Types/Structs/Context/DeviceContext.h"
@@ -15,6 +12,7 @@
 #include "GImplementations/Utils/GamepadSensors.h"
 #include "GImplementations/Utils/GamepadTouch.h"
 #include "GImplementations/Utils/GamepadTrigger.h"
+#include <thread>
 
 using namespace FDualSenseTriggerComposer;
 
@@ -134,7 +132,7 @@ void FDualSenseLibrary::UpdateInput(float Delta)
 		DSCoreTypes::DSVector3D AccelG;
 
 		using namespace FGamepadSensors;
-		ProcessMotionData(&Context->Buffer[Padding], Context->Calibration, GyroDeg,AccelG);
+		ProcessMotionData(&Context->Buffer[Padding], Context->Calibration, GyroDeg, AccelG);
 
 		InputToFill->Gyroscope = GyroDeg;
 		InputToFill->Accelerometer = AccelG;

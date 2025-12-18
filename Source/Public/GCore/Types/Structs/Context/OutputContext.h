@@ -4,12 +4,12 @@
 // Targets: Windows, Linux, macOS.
 
 #pragma once
-#include "GCore/Types/Structs/Config/GamepadAudio.h"
-#include "GCore/Types/Structs/Config/GamepadFeature.h"
 #include "../Config/GamepadLightbar.h"
-#include "GCore/Types/Structs/Config/GamepadLigthbarFlash.h"
 #include "../Config/GamepadPlayerLed.h"
 #include "../Config/GamepadRumbles.h"
+#include "GCore/Types/Structs/Config/GamepadAudio.h"
+#include "GCore/Types/Structs/Config/GamepadFeature.h"
+#include "GCore/Types/Structs/Config/GamepadLigthbarFlash.h"
 #include "GCore/Types/Structs/Config/GamepadTriggersHaptic.h"
 
 /**

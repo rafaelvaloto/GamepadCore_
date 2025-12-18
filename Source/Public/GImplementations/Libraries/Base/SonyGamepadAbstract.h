@@ -167,7 +167,9 @@ public:
 	 */
 	void SetVibration(std::uint8_t LeftRumble, std::uint8_t RightRumble) override {}
 
-	SonyGamepadAbstract() : HIDDeviceContexts() {}
+	SonyGamepadAbstract()
+	    : HIDDeviceContexts()
+	{}
 
 protected:
 	/**

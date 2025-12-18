@@ -29,7 +29,7 @@ namespace GamepadCore
 		{
 			t.ProcessAudioHaptic(ctx)
 		} -> std::same_as<void>;
-	};
+	}
 
 	template<typename THardwarePolicy>
 	class TGenericHardwareInfo : public IPlatformHardwareInfo
