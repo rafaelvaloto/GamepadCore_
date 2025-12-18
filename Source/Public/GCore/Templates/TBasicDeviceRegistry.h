@@ -13,22 +13,15 @@
 namespace GamepadCore
 {
 	template<typename T>
-	concept DeviceRegistryPolicy = requires(T t)
-	{
+	concept DeviceRegistryPolicy = requires(T t, typename T::EngineIdType id) {
 		typename T::EngineIdType;
 
-		{
-			t.AllocEngineDevice()
-		} -> std::same_as<typename T::EngineIdType>;
+		{ t.AllocEngineDevice() } -> std::same_as<typename T::EngineIdType>;
 
-		{
-			t.DisconnectDevice(std::declval<typename T::EngineIdType>())
-		} -> std::same_as<void>;
+		{ t.DisconnectDevice(id) } -> std::same_as<void>;
 
-		{
-			t.DispatchNewGamepad(std::declval<typename T::EngineIdType>())
-		} -> std::same_as<void>;
-	}
+		{ t.DispatchNewGamepad(id) } -> std::same_as<void>;
+	};
 
 	template<typename DeviceRegistryPolicy>
 	class TBasicDeviceRegistry : public IDeviceRegistry

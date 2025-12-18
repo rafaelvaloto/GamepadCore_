@@ -9,8 +9,7 @@
 namespace GamepadCore
 {
 	template<typename T>
-	concept IsHardwarePolicy = requires(T t, FDeviceContext* ctx, std::vector<FDeviceContext>& devs)
-	{
+	concept IsHardwarePolicy = requires(T t, FDeviceContext* ctx, std::vector<FDeviceContext>& devs) {
 		{
 			t.Read(ctx)
 		} -> std::same_as<void>;
@@ -29,7 +28,7 @@ namespace GamepadCore
 		{
 			t.ProcessAudioHaptic(ctx)
 		} -> std::same_as<void>;
-	}
+	};
 
 	template<typename THardwarePolicy>
 	class TGenericHardwareInfo : public IPlatformHardwareInfo
