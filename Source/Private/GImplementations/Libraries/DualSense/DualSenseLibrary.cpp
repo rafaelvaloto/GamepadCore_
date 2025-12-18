@@ -104,7 +104,7 @@ bool FDualSenseLibrary::Initialize(const FDeviceContext& Context)
 	return true;
 }
 
-void FDualSenseLibrary::UpdateInput(float Delta)
+void FDualSenseLibrary::UpdateInput(float /*Delta*/)
 {
 	FDeviceContext* Context = GetMutableDeviceContext();
 	if (!Context || !Context->IsConnected)

@@ -27,7 +27,7 @@ void FDualShockLibrary::UpdateOutput()
 	FGamepadOutput::OutputDualShock(Context);
 }
 
-void FDualShockLibrary::UpdateInput(float Delta)
+void FDualShockLibrary::UpdateInput(float /*Delta*/)
 {
 	FDeviceContext* Context = GetMutableDeviceContext();
 	IPlatformHardwareInfo::Get().Read(Context);

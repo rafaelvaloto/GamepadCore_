@@ -122,7 +122,7 @@ public:
 	 * specified platform user and input device.
 	 * @return A boolean value indicating whether the input update was successful.
 	 */
-	virtual void UpdateInput(float Delta) override;
+	virtual void UpdateInput(float /*Delta*/) override;
 	/**
 	 * Stops any ongoing adaptive trigger effects on the specified controller
 	 * hand.
