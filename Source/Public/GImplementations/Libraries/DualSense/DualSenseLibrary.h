@@ -362,7 +362,7 @@ public:
 	 * @param Color The desired color of the lightbar, represented as an FDSColor
 	 */
 	virtual void SetLightbar(DSCoreTypes::FDSColor Color) override;
-	virtual void SetLightbarFlash(DSCoreTypes::FDSColor Color, float BrithnessTime, float ToggleTime) override {}
+	virtual void SetLightbarFlash(DSCoreTypes::FDSColor /*Color*/, float /*BrithnessTime*/, float /*ToggleTime*/) override {}
 	/**
 	 * @brief Updates the haptic feedback system of the DualSense controller with
 	 * audio data.
