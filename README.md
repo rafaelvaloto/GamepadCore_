@@ -124,7 +124,7 @@ graph BT
    #include "GCore/Templates/TBasicDeviceRegistry.h"
    #include "Platforms/Windows/WindowsHardwarePolicy.h"
 ```cpp
-// Define a registry using the Windows Policy
+// defines the communication between the operating system hardware and the gamepad core library. using the Windows Policy (e.g,. Linux, Mac)..
 using MyHardwareRegistry = GamepadCore::TBasicDeviceRegistry<WindowsHardwarePolicy>;
 
 int main() {
