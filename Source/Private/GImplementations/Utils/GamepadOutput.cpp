@@ -66,6 +66,7 @@ void FGamepadOutput::OutputDualShock(
 void FGamepadOutput::OutputDualSense(
     FDeviceContext* DeviceContext)
 {
+	FOutputContext* HidOut = &DeviceContext->Output;
 	const size_t Padding =
 	    DeviceContext->ConnectionType == EDSDeviceConnection::Bluetooth ? 2 : 1;
 	DeviceContext->BufferOutput[0] =
@@ -76,8 +77,31 @@ void FGamepadOutput::OutputDualSense(
 		DeviceContext->BufferOutput[1] = 0x02;
 	}
 
-	FOutputContext* HidOut = &DeviceContext->Output;
 	unsigned char* Output = &DeviceContext->BufferOutput[Padding];
+	if (Padding == 2 && HidOut->Feature.FeatureMode == 0b00000111)
+	{
+		Output[0] = HidOut->Feature.VibrationMode;
+		Output[38] = 0x07;
+		Output[41] = 0x02;
+		if (DeviceContext->ConnectionType == EDSDeviceConnection::Bluetooth)
+		{
+			const std::int32_t CrcChecksum =
+			    static_cast<std::int32_t>(Compute(DeviceContext->BufferOutput, 74));
+			DeviceContext->BufferOutput[0x4A] =
+			    static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+			DeviceContext->BufferOutput[0x4B] =
+			    static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+			DeviceContext->BufferOutput[0x4C] =
+			    static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+			DeviceContext->BufferOutput[0x4D] =
+			    static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+		}
+
+		IPlatformHardwareInfo::Get().Write(DeviceContext);
+		HidOut->Feature.FeatureMode = 0x7F;
+		return;
+	}
+
 	Output[0] = HidOut->Feature.VibrationMode;
 	Output[1] = HidOut->Feature.FeatureMode;
 	Output[2] = HidOut->Rumbles.Left;
@@ -88,8 +112,7 @@ void FGamepadOutput::OutputDualSense(
 	Output[7] = HidOut->Audio.Mode;
 	Output[9] = HidOut->Audio.MicStatus;
 	Output[8] = 0x00;
-	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) |
-	             (HidOut->Feature.SoftRumbleReduce & 0x0F);
+	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
 	Output[38] = 0x07;
 	Output[41] = 0x02;
 	Output[42] = HidOut->PlayerLed.Brightness;

@@ -43,7 +43,7 @@ void FDualSenseLibrary::ResetLights()
 	}
 
 	FOutputContext* HidOutput = &Context->Output;
-	if (HidOutput->Lightbar.A == 0 && HidOutput->Lightbar.B == 0 &&
+	if (HidOutput->Lightbar.G == 0 && HidOutput->Lightbar.B == 0 &&
 	    HidOutput->Lightbar.R == 0)
 	{
 		HidOutput->Lightbar.B = 255;
@@ -81,8 +81,8 @@ bool FDualSenseLibrary::Initialize(const FDeviceContext& Context)
 	{
 		FOutputContext* EnableReport = &DSContext->Output;
 		// Set flags to enable control over the lightbar, player LEDs
-		EnableReport->Feature.FeatureMode = 0x55;
-		EnableReport->Lightbar = {0, 0, 222};
+		EnableReport->Feature.FeatureMode = 0b00000111;
+		EnableReport->Lightbar = {222, 0, 0};
 		EnableReport->PlayerLed.Brightness = 0x00;
 		UpdateOutput();
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -149,7 +149,7 @@ void FDualSenseLibrary::DualSenseSettings(std::uint8_t bIsMic, std::uint8_t bIsH
 	Context->Output.Audio.HeadsetVolume = AudioVolume;
 	Context->Output.Audio.SpeakerVolume = AudioVolume;
 
-	Context->Output.Audio.Mode = 0x08;
+	Context->Output.Audio.Mode = 0x05;
 	if (bIsHeadset == 1 && bIsSpeaker == 1)
 	{
 		Context->Output.Audio.Mode = 0x21;

@@ -93,6 +93,16 @@ struct FInputContext
 	bool bDpadLeft;
 	bool bDpadRight;
 
+	// Analg bool
+	bool bLeftAnalogRight;
+	bool bLeftAnalogUp;
+	bool bLeftAnalogDown;
+	bool bLeftAnalogLeft;
+	bool bRightAnalogLeft;
+	bool bRightAnalogDown;
+	bool bRightAnalogUp;
+	bool bRightAnalogRight;
+
 	// Special Buttons
 	bool bLeftTriggerThreshold;
 	bool bRightTriggerThreshold;

@@ -47,45 +47,39 @@ namespace GamepadCore
 			}
 			TimeAccumulator = 0.0f;
 
-			std::vector<FDeviceContext> DetectedDevices;
-			IPlatformHardwareInfo::Get().Detect(DetectedDevices);
-
-			std::unordered_set<std::string> CurrentlyConnectedPaths;
-			for (const auto& Context : DetectedDevices)
-			{
-				CurrentlyConnectedPaths.insert(Context.Path);
-			}
-
-			std::vector<std::string> DisconnectedPaths;
+			std::unordered_set<std::string> OrphanPaths;
+			OrphanPaths.clear();
 			for (const auto& [Path, Key] : KnownDevicePaths)
 			{
-				if (!CurrentlyConnectedPaths.contains(Path))
+				OrphanPaths.insert(Path);
+			}
+
+			std::vector<FDeviceContext> DetectedDevices;
+			DetectedDevices.clear();
+			IPlatformHardwareInfo::Get().Detect(DetectedDevices);
+
+			for (const auto& Context : DetectedDevices)
+			{
+				OrphanPaths.erase(Context.Path);
+			}
+
+			for (const std::string& Path : OrphanPaths)
+			{
+				auto It = KnownDevicePaths.find(Path);
+				if (It != KnownDevicePaths.end())
 				{
-					if (LibraryInstances.contains(Key))
-					{
-						Policy.DisconnectDevice(Key);
-						DisconnectedPaths.push_back(Path);
-					}
+					EngineIdType DeviceId = It->second;
+					RemoveLibraryInstance(DeviceId);
+					KnownDevicePaths.erase(It);
 				}
 			}
 
-			for (const auto& Path : DisconnectedPaths)
+			for (auto Context : DetectedDevices)
 			{
-				if (KnownDevicePaths.contains(Path))
+				Context.Output = FOutputContext();
+				if (bool IsCreateHandle = IPlatformHardwareInfo::Get().CreateHandle(&Context))
 				{
-					KnownDevicePaths.erase(Path);
-				}
-			}
-
-			for (FDeviceContext& Context : DetectedDevices)
-			{
-				if (!KnownDevicePaths.contains(Context.Path))
-				{
-					Context.Output = FOutputContext();
-					if (IPlatformHardwareInfo::Get().CreateHandle(&Context))
-					{
-						CreateLibrary(Context);
-					}
+					CreateLibrary(Context);
 				}
 			}
 		}
@@ -99,7 +93,6 @@ namespace GamepadCore
 			return nullptr;
 		}
 
-	private:
 		void RemoveLibraryInstance(EngineIdType DeviceId)
 		{
 			Policy.DisconnectDevice(DeviceId);
@@ -110,6 +103,7 @@ namespace GamepadCore
 			}
 		}
 
+	private:
 		void CreateLibrary(FDeviceContext& Context)
 		{
 			std::shared_ptr<ISonyGamepad> Gamepad = nullptr;
@@ -130,20 +124,17 @@ namespace GamepadCore
 
 			if (!HistoryDevices.contains(Context.Path))
 			{
-				auto NewDevice = Policy.AllocEngineDevice();
-				HistoryDevices[Context.Path] = NewDevice;
-			}
-
-			if (!Gamepad->Initialize(Context))
-			{
-				return;
+				HistoryDevices[Context.Path] = Policy.AllocEngineDevice();
 			}
 
 			auto DeviceId = HistoryDevices[Context.Path];
-			KnownDevicePaths[Context.Path] = DeviceId;
-			LibraryInstances[DeviceId] = Gamepad;
-
-			Policy.DispatchNewGamepad(DeviceId);
+			if (!LibraryInstances.contains(DeviceId))
+			{
+				Gamepad->Initialize(Context);
+				LibraryInstances[DeviceId] = Gamepad;
+				KnownDevicePaths[Context.Path] = DeviceId;
+				Policy.DispatchNewGamepad(DeviceId);
+			}
 		}
 	};
 } // namespace GamepadCore

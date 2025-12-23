@@ -113,6 +113,22 @@ namespace FGamepadInput
 		Input->RightAnalog.X = ApplyDeadZone(RightAnalogX, Input->AnalogDeadZone);
 		Input->RightAnalog.Y = ApplyDeadZone(RightAnalogY, Input->AnalogDeadZone);
 
+		auto GetAnalogAsDigital = [](float Value, float Threshold) {
+			return Value > Threshold;
+		};
+
+		const float DigitalThreshold = 0.5f;
+
+		Input->bLeftAnalogRight = GetAnalogAsDigital(Input->LeftAnalog.X, DigitalThreshold);
+		Input->bLeftAnalogLeft = GetAnalogAsDigital(-Input->LeftAnalog.X, DigitalThreshold);
+		Input->bLeftAnalogDown = GetAnalogAsDigital(-Input->LeftAnalog.Y, DigitalThreshold);
+		Input->bLeftAnalogUp = GetAnalogAsDigital(Input->LeftAnalog.Y, DigitalThreshold);
+
+		Input->bRightAnalogRight = GetAnalogAsDigital(Input->RightAnalog.X, DigitalThreshold);
+		Input->bRightAnalogLeft = GetAnalogAsDigital(-Input->RightAnalog.X, DigitalThreshold);
+		Input->bRightAnalogDown = GetAnalogAsDigital(-Input->RightAnalog.Y, DigitalThreshold);
+		Input->bRightAnalogUp = GetAnalogAsDigital(Input->RightAnalog.Y, DigitalThreshold);
+
 		Input->LeftTriggerAnalog = TriggerL;
 		Input->RightTriggerAnalog = TriggerR;
 		Input->bCross = bCross;
@@ -232,6 +248,22 @@ namespace FGamepadInput
 		Input->LeftAnalog.Y = ApplyDeadZone(LeftAnalogY, Input->AnalogDeadZone);
 		Input->RightAnalog.X = ApplyDeadZone(RightAnalogX, Input->AnalogDeadZone);
 		Input->RightAnalog.Y = ApplyDeadZone(RightAnalogY, Input->AnalogDeadZone);
+
+		auto GetAnalogAsDigital = [](float Value, float Threshold) {
+			return Value > Threshold;
+		};
+
+		const float DigitalThreshold = 0.5f;
+
+		Input->bLeftAnalogRight = GetAnalogAsDigital(Input->LeftAnalog.X, DigitalThreshold);
+		Input->bLeftAnalogLeft = GetAnalogAsDigital(-Input->LeftAnalog.X, DigitalThreshold);
+		Input->bLeftAnalogDown = GetAnalogAsDigital(-Input->LeftAnalog.Y, DigitalThreshold);
+		Input->bLeftAnalogUp = GetAnalogAsDigital(Input->LeftAnalog.Y, DigitalThreshold);
+
+		Input->bRightAnalogRight = GetAnalogAsDigital(Input->RightAnalog.X, DigitalThreshold);
+		Input->bRightAnalogLeft = GetAnalogAsDigital(-Input->RightAnalog.X, DigitalThreshold);
+		Input->bRightAnalogDown = GetAnalogAsDigital(-Input->RightAnalog.Y, DigitalThreshold);
+		Input->bRightAnalogUp = GetAnalogAsDigital(Input->RightAnalog.Y, DigitalThreshold);
 
 		Input->LeftTriggerAnalog = TriggerL;
 		Input->RightTriggerAnalog = TriggerR;
