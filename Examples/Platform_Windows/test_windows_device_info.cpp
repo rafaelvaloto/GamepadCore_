@@ -2,15 +2,14 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-#include "../Platform_Windows/test_windows_device_info.h"
 
+#include "test_windows_device_info.h"
 
 extern "C" {
 #include <hidsdi.h>
 #include <hidpi.h>
 }
 
-#include "test_windows_device_info.h"
 #include <vector>
 #include "GCore/Types/DSCoreTypes.h"
 #include "GCore/Types/Structs/Config/GamepadCalibration.h"
@@ -209,7 +208,7 @@ void Ftest_windows_device_info::InvalidateHandle(HANDLE Handle)
 	}
 }
 
-EPollResult Ftest_windows_device_info::PollTick(HANDLE Handle, unsigned char* Buffer, std::int32_t Length, DWORD& OutBytesRead)
+ETest_PollResult Ftest_windows_device_info::PollTick(HANDLE Handle, unsigned char* Buffer, std::int32_t Length, DWORD& OutBytesRead)
 {
 	std::int32_t Err = ERROR_SUCCESS;
 	PingOnce(Handle, &Err);
@@ -217,10 +216,10 @@ EPollResult Ftest_windows_device_info::PollTick(HANDLE Handle, unsigned char* Bu
 	OutBytesRead = 0;
 	if (!ReadFile(Handle, Buffer, Length, &OutBytesRead, nullptr))
 	{
-		return EPollResult::Disconnected;
+		return ETest_PollResult::Disconnected;
 	}
 
-	return EPollResult::ReadOk;
+	return ETest_PollResult::ReadOk;
 }
 
 bool Ftest_windows_device_info::PingOnce(HANDLE Handle, std::int32_t* OutLastError)

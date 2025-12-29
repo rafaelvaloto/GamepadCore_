@@ -28,7 +28,7 @@
  * It provides status indicators for successful reads, lack of data in the current tick,
  * transient errors, or disconnected devices.
  */
-enum class EPollResult
+enum class ETest_PollResult
 {
 	ReadOk,
 	NoIoThisTick,
@@ -147,7 +147,7 @@ public:
 	 * @param OutBytesRead A reference to a variable where the number of bytes successfully read will be stored.
 	 * @return An enumeration value of type EPollResult indicating the result of the polling operation.
 	 */
-	static EPollResult PollTick(HANDLE Handle, unsigned char* Buffer, std::int32_t Length, DWORD& OutBytesRead);
+	static ETest_PollResult PollTick(HANDLE Handle, unsigned char* Buffer, std::int32_t Length, DWORD& OutBytesRead);
 	/**
 	 * @brief Determines whether the given error code should be treated as a device disconnection.
 	 *

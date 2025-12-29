@@ -3,10 +3,8 @@
 // Description: Cross-platform library for DualSense and generic gamepad input support.
 // Targets: Windows, Linux, macOS.
 #pragma once
-#include "Core/Templates/TGenericHardwareInfo.h"
-#include "Core/Types/Structs/Context/DeviceContext.h"
+#include "test_linux_device_info.h"
 #include "GCore/Templates/TGenericHardwareInfo.h"
-#include "Implementations/Platforms/Commons/CommonsDeviceInfo.h"
 
 
 // Sample Linux hardware policy adapter template
@@ -14,12 +12,11 @@
 // This example satisfies the `IsHardwarePolicy` concept used by
 // `GamepadCore::TGenericHardwareInfo`. Replace the bodies with calls to your
 // concrete Linux implementation in
-// `Source/Private/Implementations/Platforms/Commons/CommonsDeviceInfo.cpp`
 // (e.g., forward to your FCommonsDeviceInfo logic that uses SDL HID).
 namespace Ftest_linux_platform
 {
 	struct Ftest_linux_hardware_policy;
-	using FLinuxHardware = GamepadCore::TGenericHardwareInfo<Ftest_linux_hardware_policy>;
+	using Ftest_linux_hardware = GamepadCore::TGenericHardwareInfo<Ftest_linux_hardware_policy>;
 	
     struct Ftest_linux_hardware_policy
     {
@@ -27,32 +24,32 @@ namespace Ftest_linux_platform
 
         void Read(FDeviceContext* Context)
         {
-			FCommonsDeviceInfo::Read(Context);
+			Ftest_linux_device_info::Read(Context);
         }
 
         void Write(FDeviceContext* Context)
         {
-        	FCommonsDeviceInfo::Write(Context);
+        	Ftest_linux_device_info::Write(Context);
         }
 
         void Detect(std::vector<FDeviceContext>& Devices)
         {
-        	FCommonsDeviceInfo::Detect(Devices);
+        	Ftest_linux_device_info::Detect(Devices);
         }
 
         bool CreateHandle(FDeviceContext* Context)
         {
-        	return FCommonsDeviceInfo::CreateHandle(Context);
+        	return Ftest_linux_device_info::CreateHandle(Context);
         }
 
         void InvalidateHandle(FDeviceContext* Context)
         {
-        	FCommonsDeviceInfo::InvalidateHandle(Context);
+        	Ftest_linux_device_info::InvalidateHandle(Context);
         }
 
         void ProcessAudioHaptic(FDeviceContext* Context)
         {
-        	FCommonsDeviceInfo::ProcessAudioHapitc(Context);
+        	Ftest_linux_device_info::ProcessAudioHapitc(Context);
         }
     };
 }

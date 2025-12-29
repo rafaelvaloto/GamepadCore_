@@ -2,7 +2,7 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-#include "Platform_Linux/test_linux_device_info.h"
+#include "test_linux_device_info.h"
 
 #ifdef __unix__
 #include "SDL_hidapi.h"
