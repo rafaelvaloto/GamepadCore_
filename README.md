@@ -1,4 +1,5 @@
-<h1 align="center">GamepadCore 🕹️</h1>
+<h1 align="center">Gamepad-Core 🕹️</h1>
+<h2 align="center"> DualSense & DualShock</h2>
 
 <p align="center">
 Modern, policy-based C++ library for advanced gamepad features (DualSense/DS4). Engine-agnostic architecture designed for Unreal, Unity, Godot, and O3DE.
@@ -17,8 +18,8 @@ Modern, policy-based C++ library for advanced gamepad features (DualSense/DS4). 
 ![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-313131?style=for-the-badge&logo=unrealengine&logoColor=white)
 ![Unity](https://img.shields.io/badge/Unity-000000?style=for-the-badge&logo=unity&logoColor=white)
 
-
 </div>
+</p>
 
 ---
 
