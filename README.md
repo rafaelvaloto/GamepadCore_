@@ -34,7 +34,6 @@ Since **GamepadCore** is decoupled from game engines, it serves as the backend l
 | <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Godot_icon.svg" width="40"/>  | [**Godot-Dualsense**](https://github.com/rafaelvaloto/Godot-Dualsense)                                 | A GDExtension wrapper exposing features to GDScript via Signals. |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/UE_Logo_Black_Centered.svg" width="40"/>  | [**Unreal-Dualsense**](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/tree/v2.0.0-pre-release) | A UE5 Plugin implementation demonstrating how to map raw HID to Unreal's Subsystem and Input mappings. |
 
-> 💡 **Why this matters:** This proves that the core logic (HID parsing, Haptics, Trigger math) is written once and reused everywhere.
 
 ## ✨ Key Features
 This library implements the raw protocol logic to communicate directly with hardware, offering features that standard drivers miss:
@@ -52,6 +51,35 @@ This library implements the raw protocol logic to communicate directly with hard
 * ⚙️ Force Feedback: Low-level command generation for standard rumble motors (High/Low frequency).
 
 * 🤝 Non-Intrusive: Designed to coexist with existing input managers (like Windows RawInput, UE Enhanced Input, or SDL), preventing device conflict.
+
+## 🚀 Quick Start: Integration Test
+
+The project comes with a pre-configured **Integration Test** target in CMake.
+Just open the project in any IDE with CMake support (CLion, VS Code, Visual Studio), select the `integration_test` target, and hit **Run**.
+
+### 🎮 Test Controls
+Once the console application is running, use your DualSense to test the features:
+
+#### [ FACE BUTTONS ]
+| Button | Action | Effect |
+| :--- | :--- | :--- |
+| **❌ Cross** | Rumble | Heavy Vibration + 🔴 Red Light |
+| **⭕ Circle** | Lightbar | Soft Vibration + 🔵 Blue Light |
+| **🟥 Square** | GameCube | Activates "GameCube-style" trigger snap on **R2** |
+| **🔺 Triangle** | Reset | **Stops all effects** (Panic Button) |
+| **L1 / R1** | Effects | Gallop Effect (L2) / Machine Gun (R2) |
+
+#### [ D-PAD (Trigger Mods on R2) ]
+| Button | Action | Effect |
+| :--- | :--- | :--- |
+| **⬆️ Up** | Trigger Effect | **Feedback** (Rigid Resistance) |
+| **⬇️ Down** | Trigger Effect | **Bow** (String Tension) |
+| **⬅️ Left** | Trigger Effect | **Weapon** (Semi-Automatic) |
+| **➡️ Right** | Trigger Effect | **Automatic Gun** (Buzzing) |
+
+> **Note:** The console will log the raw HID output for debugging purposes as you press buttons.
+>
+
 ## 🏛️ Architecture Overview
 
 The library follows a strict separation of concerns to ensure portability. By using **Policy-Based Design**, the core logic remains pure C++, while platform-specific details (like how Windows handles USB vs. how Linux handles HID) are injected externally.
@@ -192,6 +220,8 @@ int main() {
 }
 ```
 ## 🧪 Integration Tests & Examples
+
+
 
 This project includes a complete standalone integration test located in:
 📂 **`GamepadCore/Tests/Integration/`**
