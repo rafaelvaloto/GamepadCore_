@@ -12,6 +12,8 @@ if(WIN32)
     add_compile_definitions(UNICODE _UNICODE)
 endif()
 
+add_definitions(-DBUILD_GAMEPAD_CORE_TESTS)
+
 # --- Adiciona a Biblioteca Principal (Core) ---
 # Isso vai processar o CMakeLists.txt dentro da pasta Source
 add_subdirectory(Source)

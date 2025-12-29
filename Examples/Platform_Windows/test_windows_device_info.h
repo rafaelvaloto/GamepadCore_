@@ -6,20 +6,9 @@
 
 
 #ifdef _WIN32
-// O NOMINMAX é crucial para evitar que o windows.h defina macros de min/max
-// que quebrariam o std::min e std::max do C++ padrão.
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-
 #include <Windows.h>
 #endif
 
-#include "GCore/Types/DSCoreTypes.h"
-#include "GCore/Interfaces/IPlatformHardwareInfo.h"
-#include "GCore/Types/Structs/Context/DeviceContext.h"
-
-#include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Types/DSCoreTypes.h"
 #include "GCore/Types/Structs/Context/DeviceContext.h"
 

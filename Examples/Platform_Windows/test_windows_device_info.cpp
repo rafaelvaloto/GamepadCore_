@@ -1,13 +1,12 @@
 // Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
-#ifdef BUILD_GAMEPAD_CORE_TESTS
 
 #include "test_windows_device_info.h"
+#ifdef BUILD_GAMEPAD_CORE_TESTS
 
 extern "C" {
 #include <hidsdi.h>
-#include <hidpi.h>
 }
 
 #include <vector>
@@ -55,7 +54,7 @@ void Ftest_windows_device_info::Detect(std::vector<FDeviceContext>& Devices)
 		{
 			const HANDLE TempDeviceHandle = CreateFileW(
 			    DetailDataBuffer->DevicePath,
-			    GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr);
+			    GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 
 			if (TempDeviceHandle != INVALID_HANDLE_VALUE)
 			{
@@ -166,7 +165,7 @@ bool Ftest_windows_device_info::CreateHandle(FDeviceContext* DeviceContext)
 	std::wstring MyStdString = std::filesystem::path(Source).wstring();
 	const HANDLE DeviceHandle = CreateFileW(
 	    MyStdString.data(),
-	    GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr);
+	    GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 
 	if (DeviceHandle == INVALID_PLATFORM_HANDLE)
 	{

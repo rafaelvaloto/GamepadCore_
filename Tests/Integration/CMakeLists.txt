@@ -1,7 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.20)
 
 project(GamepadCoreIntegrationTest)
-add_definitions(-DBUILD_GAMEPAD_CORE_TESTS)
 
 # Define o padrão C++20
 set(CMAKE_CXX_STANDARD 20)
