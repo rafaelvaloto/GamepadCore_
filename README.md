@@ -20,7 +20,8 @@ Modern, policy-based C++ library for advanced gamepad features (DualSense/DS4). 
 </div>
 </p>
 
-<h2 align="center"> DualSense & DualShock</h2>
+## DualSense & DualShock
+Simple cross-platform integration for DualSense & DualShock compatible with any engine. A complete, easily customizable framework tested and validated on Unreal Engine and Godot.
 
 **GamepadCore** is a high-performance, platform-agnostic C++ library designed to handle raw HID communication with game controllers. It bypasses generic abstraction layers (like XInput or SDL) to unlock hardware-specific features often inaccessible in standard APIs.
 
