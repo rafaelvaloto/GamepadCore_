@@ -129,13 +129,12 @@ The flagship Unreal Engine plugin that brings **every feature** of Gamepad-Core 
 - ✅ Force Feedback integration with UE's native system
 - ✅ Hot-swap detection for seamless controller switching
 
-**Live Demos:**
+**Example projects in Unreal Engine 5.6**
 - [Arena Shooter Sample](https://drive.google.com/file/d/11iUQuWwA4zkFI_eP0roYbTDh0ss8614m/view?usp=drive_link) — Weapon recoil, damage feedback, LED effects
 - [Audio Haptics Demo](https://drive.google.com/file/d/1lGUBfz42gnh2bSIJTptC_LqOdFHsPuSi/view?usp=sharing) — Bluetooth & USB audio conversion
-- [Gyro Aiming Tutorial](https://youtu.be/r_NhoODeELU? si=IdqRFx8_aimeIToD) — Precision ADS mechanics
+- [Live Demo: Gyro Aiming YouTube](https://youtu.be/r_NhoODeELU?si=Ca2IOUzEDT7UFls3) — Precision ADS mechanics
 
 > **All v2.x features are 100% powered by Gamepad-Core's API.**
-
 
 
 ### 🧩 Godot Engine — Prototype Integration
