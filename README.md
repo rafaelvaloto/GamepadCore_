@@ -22,7 +22,7 @@
 
 **Works with any C++ project — Game Engines, Emulators, Desktop Apps, and more**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Integration](#-integration) • [Examples](#-real-world-projects) • [Architecture](#-Platform Policy Structure)
+[Features](#-features) • [Quick Start](#-quick-start) • [Integration](#-integration) • [Examples](#-real-world-projects) • [Architecture](#-design-philosophy)
 
 
 </div>
