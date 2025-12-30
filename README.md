@@ -5,6 +5,8 @@
 ### The Ultimate Cross-Platform DualSense & DualShock API
 **Pure C++ • Zero Dependencies • Engine Agnostic**
 
+[Report Bug](https://github.com/rafaelvaloto/Gamepad-Core/issues) · [Suggest a Feature](https://github.com/rafaelvaloto/Gamepad-Core/pulls) · [Documentation](https://github.com/rafaelvaloto/Gamepad-Core/wiki)
+
 [![License:  MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://github.com/rafaelvaloto/Gamepad-Core?tab=MIT-1-ov-file)
 [![C++20](https://img.shields.io/badge/C++-20-00599C.svg?style=for-the-badge&logo=c%2B%2B)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-064F8C.svg?style=for-the-badge&logo=cmake)](https://cmake.org/)
@@ -20,7 +22,7 @@
 
 **Works with any C++ project — Game Engines, Emulators, Desktop Apps, and more**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Integration](#-integration) • [Examples](#-real-world-projects) • [Architecture](https://github.com/rafaelvaloto/Gamepad-Core/wiki/%F0%9F%8F%9B%EF%B8%8F-Architecture-Overview)
+[Features](#-features) • [Quick Start](#-quick-start) • [Integration](#-integration) • [Examples](#-real-world-projects) • [Architecture](#-Platform Policy Structure)
 
 
 </div>
@@ -171,11 +173,11 @@ git clone https://github.com/rafaelvaloto/Gamepad-Core.git
 cd Gamepad-Core
 
 # 2. Configure and build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
-cmake --build build --target IntegrationTest -j
+cmake -S . -B cmake-build-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+cmake --build cmake-build-release --target IntegrationTest -j
 
 # 3. Run (make sure your DualSense/DualShock is connected)
-./build/Tests/Integration/IntegrationTest
+./cmake-build-release/Tests/Integration/IntegrationTest
 ```
 
 ### 🎮 Test Controls
@@ -245,7 +247,7 @@ int main() {
                 auto Context = Gamepad->GetMutableDeviceContext();
                 auto Input = Context->GetInputState();
                 
-                if (Input. bCross) {
+                if (Input.bCross) {
                     // Trigger haptic feedback
                     Gamepad->SetLightbar({255, 0, 0});
                     Gamepad->SetRumble(255, 128);
@@ -253,7 +255,32 @@ int main() {
                 
                 // Control adaptive triggers
                 if (auto* Trigger = Gamepad->GetIGamepadTrigger()) {
-                    Trigger->SetWeapon(EDSGamepadHand::Right, 2, 200, 80);
+                    
+                    Trigger->SetGameCube(EDSGamepadHand::AnyHand);
+                    
+                    // Example Custom Trigger Bow(0x22)
+                    std::vector<uint8_t> BufferTrigger(10);
+                    BufferTrigger[0] = 0x22;
+                    BufferTrigger[1] = 0x02;
+                    BufferTrigger[2] = 0x01;
+                    BufferTrigger[3] = 0x3f;
+                    BufferTrigger[4] = 0x00;
+                    BufferTrigger[5] = 0x00;
+                    BufferTrigger[6] = 0x00;
+                    BufferTrigger[7] = 0x00;
+                    BufferTrigger[8] = 0x00;
+                    BufferTrigger[9] = 0x00;
+
+                    if (Trigger) {
+                        // Trigger->SetBow22();
+                        Trigger->SetCustomTrigger(EDSGamepadHand::Right, BufferTrigger);
+                    }
+                }
+                
+                // Audio Haptic Interface
+                if (auto* Haptic = Gamepad->IGamepadAudioHaptics()) {
+                    // Convert audio buffer into haptic feedback
+                    // Haptic->ProcessAudioHaptic(<AudioData>);
                 }
             }
         }
@@ -269,7 +296,7 @@ Gamepad-Core uses **policies** to abstract OS-specific code:
 
 ```cpp
 struct MyCustomHardwarePolicy {
-     void Read(FDeviceContext* Context)
+        void Read(FDeviceContext* Context)
 		{
 			Ftest_windows_device_info::Read(Context);
 		}
