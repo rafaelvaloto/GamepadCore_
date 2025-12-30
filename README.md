@@ -269,15 +269,39 @@ Gamepad-Core uses **policies** to abstract OS-specific code:
 
 ```cpp
 struct MyCustomHardwarePolicy {
-    // Enumerate connected devices
-    static void EnumerateDevices(TArray<FDeviceInfo>& OutDevices);
-    
-    // Open HID connection
-    static void* OpenDevice(const FDeviceInfo& Device);
-    
-    // Read/Write HID reports
-    static bool ReadReport(void* Handle, uint8_t* Buffer, size_t Size);
-    static bool WriteReport(void* Handle, const uint8_t* Buffer, size_t Size);
+     void Read(FDeviceContext* Context)
+		{
+			Ftest_windows_device_info::Read(Context);
+		}
+
+		void Write(FDeviceContext* Context)
+		{
+			Ftest_windows_device_info::Write(Context);
+		}
+
+		void Detect(std::vector<FDeviceContext>& Devices)
+		{
+			Ftest_windows_device_info::Detect(Devices);
+		}
+
+		bool CreateHandle(FDeviceContext* Context)
+		{
+			return Ftest_windows_device_info::CreateHandle(Context);
+		}
+
+		void InvalidateHandle(FDeviceContext* Context)
+		{
+			Ftest_windows_device_info::InvalidateHandle(Context);
+		}
+
+		void ProcessAudioHaptic(FDeviceContext* Context)
+		{
+			Ftest_windows_device_info::ProcessAudioHapitc(Context);
+		}
+
+		void InitializeAudioDevice (FDeviceContext* Context)
+		{
+		}
 };
 ```
 
