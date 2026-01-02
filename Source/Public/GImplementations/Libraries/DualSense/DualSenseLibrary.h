@@ -384,7 +384,7 @@ public:
 	 * immersive feedback during audio playback or gaming scenarios that utilize
 	 * DualSense controllers.
 	 */
-	virtual void AudioHapticUpdate(const std::vector<std::int8_t>& Data) override;
+	virtual void AudioHapticUpdate(const std::vector<std::uint8_t>& Data) override;
 	virtual void AudioHapticUpdate(const std::vector<std::int16_t>& AudioData) override;
 
 private:
