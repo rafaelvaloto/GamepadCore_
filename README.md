@@ -149,6 +149,21 @@ A prototype demonstrating Gamepad-Core's portability through native GDExtension 
 
 ---
 
+### ⚙️ O3DE (Open 3D Engine) — Gem Integration
+
+**[O3DE-Dualsense](https://github.com/rafaelvaloto/o3de-dualsense)** (O3DE Gem)
+
+A native O3DE Gem that brings DualSense and DualShock 4 support to the Open 3D Engine. Demonstrates Gamepad-Core's flexibility with O3DE's modular Gem architecture.
+
+**Features:**
+- ✅ Full adaptive trigger support
+- ✅ RGB lightbar and player LED control
+- ✅ Haptic feedback integration
+- ✅ Native O3DE EBus system integration
+- ✅ Blueprint-compatible scripting bindings
+
+---
+
 ### 💡 Your Project Could Be Next
 
 Gamepad-Core is designed to be **drop-in ready** for any C++ codebase. Whether you're building: 
