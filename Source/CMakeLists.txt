@@ -19,7 +19,6 @@ file(GLOB_RECURSE GAMEPADCORE_SOURCES CONFIGURE_DEPENDS
 add_library(GamepadCore STATIC
         ${GAMEPADCORE_HEADERS}
         ${GAMEPADCORE_SOURCES}
-        ../Tests/Integration/Features/adaptive-triggers.test.cpp
         Public/GImplementations/Utils/GamepadAudio.h
 )
 
