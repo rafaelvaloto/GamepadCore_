@@ -184,7 +184,7 @@ void AudioDataCallback(ma_device* pDevice, void* pOutput, const void*, ma_uint32
 				std::lock_guard<std::mutex> lock(pData->btAccumulatorMutex);
 				if (pData->btAccumulator.size() < requiredSamples)
 				{
-					return;
+					break; // Not enough data yet, exit loop but continue to update framesPlayed
 				}
 
 				// Extract 1024 frames from accumulator
