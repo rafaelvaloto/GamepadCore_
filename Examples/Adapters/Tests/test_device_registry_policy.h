@@ -3,7 +3,8 @@
 // Description: Example implementation of DeviceRegistry Policy for Tests.
 #pragma once
 #ifdef BUILD_GAMEPAD_CORE_TESTS
-#include <stdint.h>
+#include <cstdint>
+#include <iostream>
 struct Ftest_device_registry_policy
 {
 public:
