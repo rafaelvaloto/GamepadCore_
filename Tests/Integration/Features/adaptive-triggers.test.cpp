@@ -166,9 +166,9 @@ int main()
 			else if (InputState.bLeftShoulder)
 			{
 				BufferTrigger[0] = 0x23;
-				BufferTrigger[1] = 0x20;
-				BufferTrigger[2] = 0x02;
-				BufferTrigger[3] = 0x0f;
+				BufferTrigger[1] = 0x82;
+				BufferTrigger[2] = 0x00;
+				BufferTrigger[3] = 0xf7;
 				BufferTrigger[4] = 0x02;
 				BufferTrigger[5] = 0x00;
 				BufferTrigger[6] = 0x00;
@@ -186,11 +186,11 @@ int main()
 			else if (InputState.bRightShoulder)
 			{
 				BufferTrigger[0] = 0x27;
-				BufferTrigger[1] = 0x02;
+				BufferTrigger[1] = 0x80;
 				BufferTrigger[2] = 0x02;
 				BufferTrigger[3] = 0x3a;
 				BufferTrigger[4] = 0x0a;
-				BufferTrigger[5] = 0x05;
+				BufferTrigger[5] = 0x04;
 				BufferTrigger[6] = 0x00;
 				BufferTrigger[7] = 0x00;
 				BufferTrigger[8] = 0x00;
