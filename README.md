@@ -315,7 +315,7 @@ int main() {
                 // Audio Haptic Interface
                 if (auto* Haptic = Gamepad->IGamepadAudioHaptics()) {
                     // Convert audio buffer into haptic feedback
-                    // Haptic->ProcessAudioHaptic(<AudioData>);
+                    // Haptic->AudioHapticUpdate(<AudioData>);
                 }
             }
         }
@@ -519,11 +519,8 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for d
 
 Copyright (c) 2025 **Rafael Valoto**
 
-
 ---
 
-
-This project is distributed under the MIT License. See the `LICENSE` file for more details.
 ## ⭐ Credits and Acknowledgments
 
 The foundation of this plugin was built upon the research and code from several amazing projects in the community:

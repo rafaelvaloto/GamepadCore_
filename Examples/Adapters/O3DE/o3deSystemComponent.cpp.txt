@@ -1,0 +1,105 @@
+﻿// Copyright (c) 2025 Rafael Valoto. All Rights Reserved.
+// Project: GamepadCore - Adapter Example
+// Description: Example implementation of o3deSystemComponent.
+
+#include "o3deSystemComponent.h"
+
+#include <AzCore/Serialization/SerializeContext.h>
+#include <o3de-dualsense/o3de-dualsenseTypeIds.h>
+
+namespace o3de_dualsense
+{
+    AZ_COMPONENT_IMPL(o3de_dualsenseSystemComponent, "o3de_dualsenseSystemComponent",
+                      o3de_dualsenseSystemComponentTypeId);
+
+    void o3de_dualsenseSystemComponent::Reflect(AZ::ReflectContext* context)
+    {
+        if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
+        {
+            serializeContext->Class<o3de_dualsenseSystemComponent, AZ::Component>()->Version(0);
+        }
+    }
+
+    void o3de_dualsenseSystemComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
+    {
+        provided.push_back(AZ_CRC_CE("o3de_dualsenseService"));
+    }
+
+    void
+    o3de_dualsenseSystemComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
+    {
+        incompatible.push_back(AZ_CRC_CE("o3de_dualsenseService"));
+    }
+
+    void o3de_dualsenseSystemComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+    {
+        AZ_UNUSED(required);
+        // required.push_back(AZ_CRC_CE("InputSystem"));
+    }
+
+    void o3de_dualsenseSystemComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    {
+        AZ_UNUSED(dependent);
+        // dependent.push_back(...);
+    }
+
+    o3de_dualsenseSystemComponent::o3de_dualsenseSystemComponent() {}
+
+    o3de_dualsenseSystemComponent::~o3de_dualsenseSystemComponent() {}
+
+    void o3de_dualsenseSystemComponent::Activate()
+    {
+        auto windowsHardware = std::make_unique<WindowsHardware>();
+        IPlatformHardwareInfo::SetInstance(std::move(windowsHardware));
+
+        m_deviceRegistry.Activate();
+        AZ::TickBus::Handler::BusConnect();
+    }
+
+    void o3de_dualsenseSystemComponent::Deactivate()
+    {
+        AZ::TickBus::Handler::BusDisconnect();
+
+        m_deviceRegistry.Deactivate();
+        IPlatformHardwareInfo::SetInstance(nullptr);
+    }
+
+    bool IsRunningRumble = false;
+    void o3de_dualsenseSystemComponent::OnTick(const float deltaTime, AZ::ScriptTimePoint time)
+    {
+        AZ_UNUSED(time);
+        m_deviceRegistry.PlugAndPlay(deltaTime);
+
+        const AZ::u32 inDevices = m_deviceRegistry.GetAllocatedDevices();
+        for (AZ::u32 i = 0; i < inDevices; i++)
+        {
+            ISonyGamepad* gamepad = m_deviceRegistry.GetGamepadLibrary(i);
+            if (gamepad)
+            {
+                gamepad->UpdateInput(deltaTime);
+                if (FDeviceContext* Context = gamepad->GetMutableDeviceContext())
+                {
+                    m_deviceRegistry.ProccessInput(i, Context);
+                }
+
+                if (!IsRunningRumble)
+                {
+                    IGamepadTrigger* Trigger = gamepad->GetIGamepadTrigger();
+                    if (Trigger)
+                    {
+                        Trigger->SetBow22(0xf8, 0x3f, EDSGamepadHand::Left);
+                        Trigger->SetMachine27(0x80, 0x02, 0x03, 0x3f, 0x06, 0x02, EDSGamepadHand::Right);
+                    }
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    gamepad->SetLightbar({255, 0, 0});
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    gamepad->SetVibration(10, 30);
+
+                    IsRunningRumble = true;
+                }
+            }
+        }
+    }
+} // namespace o3de_dualsense

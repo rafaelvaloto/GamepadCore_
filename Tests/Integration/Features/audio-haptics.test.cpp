@@ -492,7 +492,7 @@ int main(int argc, char* argv[])
 			ConsumeHapticsQueue(AudioHaptics, callbackData);
 
 			// Small delay to let audio finish
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
 			// Cleanup
 			ma_device_uninit(&device);
