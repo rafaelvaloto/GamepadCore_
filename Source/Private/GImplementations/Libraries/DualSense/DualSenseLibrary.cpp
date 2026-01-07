@@ -14,6 +14,8 @@
 #include "GImplementations/Utils/GamepadTrigger.h"
 #include <thread>
 
+#include "GCore/Utils/CR32.h"
+
 using namespace FDualSenseTriggerComposer;
 
 void FDualSenseLibrary::SetVibration(std::uint8_t LeftRumble,
@@ -79,14 +81,31 @@ bool FDualSenseLibrary::Initialize(const FDeviceContext& Context)
 	FDeviceContext* DSContext = GetMutableDeviceContext();
 	if (DSContext->ConnectionType == EDSDeviceConnection::Bluetooth)
 	{
-		FOutputContext* EnableReport = &DSContext->Output;
-		// Set flags to enable control over the lightbar, player LEDs
-		EnableReport->Feature.FeatureMode = 0b01110111;
-		EnableReport->Lightbar = {255, 255, 255};
-		EnableReport->PlayerLed.Brightness = 0x00;
-		EnableReport->PlayerLed.Led = static_cast<unsigned char>(EDSPlayer::One);
-		UpdateOutput();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		{
+			std::lock_guard<std::mutex> LockGuard(DSContext->OutputMutex);
+			unsigned char* MutableBuffer = DSContext->GetRawOutputBuffer();
+			size_t Padding = 2;
+			MutableBuffer[0] = 0x31;
+			MutableBuffer[1] = 0x02;
+
+			unsigned char* Output = &MutableBuffer[Padding];
+			Output[1] = 0b11111111;
+			Output[38] = 0x00;
+			Output[44] = 0x00;
+			Output[45] = 0x00;
+			Output[46] = 0x00;
+			if (DSContext->ConnectionType == EDSDeviceConnection::Bluetooth)
+			{
+				const auto CrcChecksum = GCoreUtils::CR32::Compute(MutableBuffer, 74);
+				MutableBuffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+				MutableBuffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+				MutableBuffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+				MutableBuffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+			}
+
+			IPlatformHardwareInfo::Get().Write(DSContext);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
 
 		// Audio haptics bluetooth
 		DSContext->BufferAudio[0] = 0x32;
@@ -99,7 +118,6 @@ bool FDualSenseLibrary::Initialize(const FDeviceContext& Context)
 		DSContext->BufferAudio[7] = 180;
 		DSContext->BufferAudio[8] = 55;
 		DSContext->BufferAudio[9] = 55;
-
 		return true;
 	}
 
