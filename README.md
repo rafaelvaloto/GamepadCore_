@@ -36,7 +36,7 @@
 > 1. In your `Write` method of your hardware policy, replace `Context->BufferOutput` with `Context->GetRawOutputBuffer()`.
 > 2. When clearing the buffer (e.g., in `InvalidateHandle`), use:
 > ```cpp
-> unsigned character* RawOutput = Context->GetRawOutputBuffer();
+> unsigned char* RawOutput = Context->GetRawOutputBuffer();
 > std::memset(RawOutput, 0, 78); // 78 is the default output buffer size
 > ```
 
