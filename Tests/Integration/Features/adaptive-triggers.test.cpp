@@ -73,7 +73,7 @@ int main()
 	while (true)
 	{
 		// frame ~60 FPS
-		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		// std::this_thread::sleep_for(std::chrono::milliseconds(16));
 		float DeltaTime = 0.016f;
 
 		Registry->PlugAndPlay(DeltaTime);
@@ -105,13 +105,13 @@ int main()
 			if (InputState.bCross)
 			{
 				StatusText = "Cross";
-				Gamepad->SetVibration(255, 255);
+				Gamepad->SetVibration(0, 200);
 				Gamepad->SetLightbar({255, 0, 0}); // Red
 			}
 			else if (InputState.bCircle)
 			{
 				StatusText = "Circle";
-				Gamepad->SetVibration(64, 64);
+				Gamepad->SetVibration(100, 0);
 				Gamepad->SetLightbar({0, 0, 255}); // Blue
 			}
 			// --- Adaptive Triggers Logic (R2) ---

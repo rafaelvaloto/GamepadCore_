@@ -49,8 +49,9 @@ void FGamepadOutput::OutputDualShock(FDeviceContext* DeviceContext)
 			MutableBuffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
 			MutableBuffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
 		}
-		IPlatformHardwareInfo::Get().Write(DeviceContext);
 	}
+
+	IPlatformHardwareInfo::Get().Write(DeviceContext);
 }
 
 void FGamepadOutput::OutputDualSense(FDeviceContext* DeviceContext)
@@ -109,9 +110,9 @@ void FGamepadOutput::OutputDualSense(FDeviceContext* DeviceContext)
 			MutableBuffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
 			MutableBuffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
 		}
-
-		IPlatformHardwareInfo::Get().Write(DeviceContext);
 	}
+
+	IPlatformHardwareInfo::Get().Write(DeviceContext);
 }
 
 void FGamepadOutput::SetTriggerEffects(unsigned char* Trigger, FGamepadTriggersHaptic& Effect)
