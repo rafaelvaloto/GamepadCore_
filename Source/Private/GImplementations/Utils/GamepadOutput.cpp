@@ -98,7 +98,6 @@ void FGamepadOutput::OutputDualSense(FDeviceContext* DeviceContext)
 			Output[38] ^= 0x01;
 		}
 
-
 		Output[42] = HidOut->PlayerLed.Brightness;
 		Output[43] = HidOut->PlayerLed.Led;
 		Output[44] = HidOut->Lightbar.R;
@@ -247,7 +246,7 @@ void FGamepadOutput::SetTriggerEffects(unsigned char* Trigger, FGamepadTriggersH
 }
 
 void FGamepadOutput::SendAudioHapticAdvanced(
-	FDeviceContext* DeviceContext)
+    FDeviceContext* DeviceContext)
 {
 	if (!DeviceContext)
 	{

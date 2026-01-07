@@ -7,14 +7,13 @@
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Types/ECoreGamepad.h"
 #include "GCore/Types/Structs/Context/DeviceContext.h"
+#include "GCore/Utils/CR32.h"
 #include "GImplementations/Utils/GamepadInput.h"
 #include "GImplementations/Utils/GamepadOutput.h"
 #include "GImplementations/Utils/GamepadSensors.h"
 #include "GImplementations/Utils/GamepadTouch.h"
 #include "GImplementations/Utils/GamepadTrigger.h"
 #include <thread>
-
-#include "GCore/Utils/CR32.h"
 
 using namespace FDualSenseTriggerComposer;
 
