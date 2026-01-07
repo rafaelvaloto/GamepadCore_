@@ -414,7 +414,7 @@ int main(int argc, char* argv[])
 			// Set visual feedback
 			Gamepad->SetLightbar({0, 255, 128});
 			Gamepad->SetPlayerLed(EDSPlayer::One, 255);
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			// std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 			// Get Audio Haptics interface
 			IGamepadAudioHaptics* AudioHaptics = Gamepad->GetIGamepadHaptics();

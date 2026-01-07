@@ -27,6 +27,20 @@
 
 </div>
 
+> [!IMPORTANT]
+> **API Change:** The `BufferOutput` attribute in the `FDeviceContext` struct is now **private**.
+> To access the write buffer, use the new method: `Context->GetRawOutputBuffer()`.
+
+>
+> **Migration:**
+> 1. In your `Write` method of your hardware policy, replace `Context->BufferOutput` with `Context->GetRawOutputBuffer()`.
+> 2. When clearing the buffer (e.g., in `InvalidateHandle`), use:
+> ```cpp
+> unsigned character* RawOutput = Context->GetRawOutputBuffer();
+> std::memset(RawOutput, 0, 78); // 78 is the default output buffer size
+> ```
+
+
 ## 🚀 What is Gamepad-Core? 
 
 **Gamepad-Core** is a high-performance, policy-based C++ library that unlocks the **full potential** of Sony's DualSense and DualShock 4 controllers through direct HID communication. 

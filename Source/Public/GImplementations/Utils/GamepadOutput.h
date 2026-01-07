@@ -21,34 +21,6 @@ class FGamepadOutput
 
 public:
 	/**
-	 * @var FPlayStationOutputComposer::CRCSeed
-	 *
-	 * The predefined seed value used for CRC32 hash computation.
-	 * Acts as the initial value for the hash generation algorithm employed in the
-	 * Compute method. Ensures consistent and reliable hash results by providing a
-	 * stable starting point.
-	 */
-	const static std::uint32_t CRCSeed;
-	/**
-	 * @variable HashTable
-	 *
-	 * Represents a precomputed hash lookup table specifically used within
-	 * `FGamepadOutput` for optimizing hash calculations. This table
-	 * is a key component in facilitating fast cryptographic or hash operations.
-	 *
-	 * The `HashTable` variable contains a fixed array of 256 32-bit values,
-	 * each defined as hexadecimal constants. These values are statically
-	 * initialized, ensuring deterministic results for hash-related operations. It
-	 * is typically used in operations related to device communication, such as
-	 * data integrity checks or packet processing within DualSense HID
-	 * interactions.
-	 *
-	 * The structure of the table ensures constant-time retrieval of hash values,
-	 * making it integral to performance-critical systems where such operations
-	 * are frequent.
-	 */
-	const static std::uint32_t HashTable[256];
-	/**
 	 * @brief Configures and sends output data to a DualSense device using the
 	 * provided device context.
 	 *
@@ -99,15 +71,4 @@ public:
 	 * is processed and sent to the device.
 	 */
 	static void SendAudioHapticAdvanced(FDeviceContext* DeviceContext);
-	/**
-	 * Computes the CRC32 hash for the given buffer using a predefined hash table
-	 * and seed value. The function iterates through each byte of the input buffer
-	 * to calculate the resulting hash.
-	 *
-	 * @param Buffer A pointer to the input buffer containing the data for which
-	 * the CRC32 hash is to be computed.
-	 * @param Len The length of the input buffer in bytes.
-	 * @return The computed CRC32 hash value.
-	 */
-	static std::uint32_t Compute(const unsigned char* Buffer, size_t Len);
 };

@@ -103,7 +103,7 @@ void Ftest_linux_device_info::Write(FDeviceContext* Context)
 	const size_t InReportLength = (Context->DeviceType == EDSDeviceType::DualShock4) ? 32 : 74;
 	const size_t OutputReportLength = (Context->ConnectionType == EDSDeviceConnection::Bluetooth) ? 78 : InReportLength;
 
-	int BytesWritten = SDL_hid_write(DeviceHandle, Context->BufferOutput, OutputReportLength);
+	int BytesWritten = SDL_hid_write(DeviceHandle, Context->GetRawOutputBuffer(), OutputReportLength);
 	if (BytesWritten < 0)
 	{
 		InvalidateHandle(Context);
@@ -202,8 +202,10 @@ void Ftest_linux_device_info::InvalidateHandle(FDeviceContext* Context)
 		Context->Path.clear();
 		std::memset(Context->Buffer, 0, sizeof(Context->Buffer));
 		std::memset(Context->BufferDS4, 0, sizeof(Context->BufferDS4));
-		std::memset(Context->BufferOutput, 0, sizeof(Context->BufferOutput));
 		std::memset(Context->BufferAudio, 0, sizeof(Context->BufferAudio));
+
+		unsigned char* RawOutput = Context->GetRawOutputBuffer();
+		std::memset(RawOutput, 0, 78);
 	}
 }
 #endif

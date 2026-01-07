@@ -104,21 +104,6 @@ struct FDeviceContext
 	 */
 	unsigned char BufferAudio[142] = {};
 	/**
-	 * A fixed-size buffer for storing input or output data associated with a
-	 * device context. This buffer is utilized for reading device input reports or
-	 * for other data management tasks. Its size is defined as 78 bytes to
-	 * accommodate device input requirements, particularly for devices connected
-	 * over Bluetooth.
-	 *
-	 * Buffer is a critical component of FDeviceContext and is managed to ensure
-	 * data consistency and proper memory zeroing upon disconnection or failure.
-	 *
-	 * @note The size of this buffer is determined by the specific device
-	 * connection type or input requirements, ensuring compatibility and
-	 * sufficient data handling capabilities.
-	 */
-	unsigned char BufferOutput[78] = {};
-	/**
 	 * @brief Holds calibration data for a gamepad device.
 	 *
 	 * This structure is utilized to store and manage calibration parameters
@@ -239,6 +224,19 @@ struct FDeviceContext
 	 */
 	std::unordered_map<std::string, float> AnalogStates;
 
+	/**
+	 * @brief Ensures thread-safe access to shared input resources.
+	 *
+	 * This mutex is used to synchronize access to input-related data or
+	 * operations, preventing race conditions in multithreaded environments. It is
+	 * essential for maintaining data consistency and avoiding concurrent
+	 * modification issues.
+	 */
+	mutable std::mutex InputMutex;
+	mutable std::mutex OutputMutex;
+
+	unsigned char* GetRawOutputBuffer() { return BufferOutput; }
+
 protected:
 	/**
 	 * @brief Handles input-specific operations and data for connected devices.
@@ -261,15 +259,23 @@ protected:
 	 * execution of input logic within the game engine.
 	 */
 	FInputContext InputGameThread;
+
+private:
 	/**
-	 * @brief Ensures thread-safe access to shared input resources.
+	 * A fixed-size buffer for storing input or output data associated with a
+	 * device context. This buffer is utilized for reading device input reports or
+	 * for other data management tasks. Its size is defined as 78 bytes to
+	 * accommodate device input requirements, particularly for devices connected
+	 * over Bluetooth.
 	 *
-	 * This mutex is used to synchronize access to input-related data or
-	 * operations, preventing race conditions in multithreaded environments. It is
-	 * essential for maintaining data consistency and avoiding concurrent
-	 * modification issues.
+	 * Buffer is a critical component of FDeviceContext and is managed to ensure
+	 * data consistency and proper memory zeroing upon disconnection or failure.
+	 *
+	 * @note The size of this buffer is determined by the specific device
+	 * connection type or input requirements, ensuring compatibility and
+	 * sufficient data handling capabilities.
 	 */
-	mutable std::mutex InputMutex;
+	unsigned char BufferOutput[78] = {};
 
 public:
 	FDeviceContext() = default;
