@@ -2,6 +2,7 @@
 /cmake-build-debug
 /cmake-build-release
 /build
+/build-test
 /.vscode
 /Examples/Platform_Windows/ViGEmAdapter/ViGEmClient-master/*
 *.log
