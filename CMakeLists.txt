@@ -16,8 +16,8 @@ endif()
 # Global definition for test-specific code blocks
 add_definitions(-DBUILD_GAMEPAD_CORE_TESTS)
 
-# --- Include Project Subdirectories ---
-# Process the library source code
+
+add_subdirectory(App)
 add_subdirectory(Source)
 
 # Option to enable or disable integration tests (default is ON)

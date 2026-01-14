@@ -1,0 +1,758 @@
+﻿#include <windows.h>
+#include <iostream>
+#include <thread>
+#include <atomic>
+#include <vector>
+#include <memory>
+#include <string>
+#include <mutex>
+#include <queue>
+
+// miniaudio for audio playback and WAV decoding
+#include "GImplementations/Utils/GamepadAudio.h"
+using namespace FGamepadAudio;
+
+// #include "Logger.h"
+#include "GCore/Interfaces/IPlatformHardwareInfo.h"
+#include "GCore/Templates/TGenericHardwareInfo.h"
+#include "GCore/Templates/TBasicDeviceRegistry.h"
+#include "GCore/Types/Structs/Context/DeviceContext.h"
+#include "../Examples/Adapters/Tests/test_device_registry_policy.h"
+
+#ifdef USE_VIGEM
+#include "../Examples/Platform_Windows/ViGEmAdapter/ViGEmAdapter.h"
+#endif
+
+#if _WIN32
+#include "../Examples/Platform_Windows/test_windows_hardware_policy.h"
+using TestHardwarePolicy = Ftest_windows_platform::Ftest_windows_hardware_policy;
+using TestHardwareInfo = Ftest_windows_platform::Ftest_windows_hardware;
+#endif
+
+using namespace GamepadCore;
+using TestDeviceRegistry = GamepadCore::TBasicDeviceRegistry<Ftest_device_registry_policy>;
+
+// Instância global da thread e controle
+std::atomic<bool> g_Running(false);
+std::atomic<bool> g_ServiceInitialized(false);
+std::thread g_ServiceThread;
+std::thread g_AudioThread;
+std::unique_ptr<TestDeviceRegistry> g_Registry;
+#ifdef USE_VIGEM
+std::unique_ptr<ViGEmAdapter> g_ViGEmAdapter;
+#endif
+FInputContext g_LastInputState;
+const int32_t TargetDeviceId = 0;
+
+
+
+// ============================================================================
+// Audio Haptics Constants (Based on AudioHapticsListener)
+// ============================================================================
+constexpr float kLowPassAlpha = 0.99f;
+constexpr float kOneMinusAlpha = 1.0f - kLowPassAlpha;
+
+constexpr float kLowPassAlphaBt = 0.98f;
+constexpr float kOneMinusAlphaBt = 1.0f - kLowPassAlphaBt;
+
+// ============================================================================
+// Thread-safe queue for audio packets
+// ============================================================================
+
+
+// ============================================================================
+// Thread-safe queue for audio packets
+// ============================================================================
+template<typename T>
+class ThreadSafeQueue
+{
+public:
+	void Push(const T& item)
+	{
+		std::lock_guard<std::mutex> lock(mMutex);
+		mQueue.push(item);
+	}
+
+	bool Pop(T& item)
+	{
+		std::lock_guard<std::mutex> lock(mMutex);
+		if (mQueue.empty())
+		{
+			return false;
+		}
+		item = mQueue.front();
+		mQueue.pop();
+		return true;
+	}
+
+	bool Empty()
+	{
+		std::lock_guard<std::mutex> lock(mMutex);
+		return mQueue.empty();
+	}
+
+private:
+	std::queue<T> mQueue;
+	std::mutex mMutex;
+};
+
+// ============================================================================
+// Global state for audio callback
+// ============================================================================
+struct AudioCallbackData
+{
+	ma_decoder* pDecoder = nullptr;
+	bool bIsSystemAudio = false;
+	float LowPassStateLeft = 0.0f;
+	float LowPassStateRight = 0.0f;
+	std::atomic<bool> bFinished{false};
+	std::atomic<uint64_t> framesPlayed{0};
+	bool bIsWireless = false;
+
+	// Queues for haptics (like AudioHapticsListener)
+	ThreadSafeQueue<std::vector<uint8_t>> btPacketQueue;
+	ThreadSafeQueue<std::vector<int16_t>> usbSampleQueue;
+
+	// Accumulator for Bluetooth - need 1024 frames to produce 64 resampled frames
+	std::vector<float> btAccumulator;
+	std::mutex btAccumulatorMutex;
+};
+
+// Audio callback - plays audio on speakers and queues haptics data
+void AudioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+	auto* pData = static_cast<AudioCallbackData*>(pDevice->pUserData);
+	if (!pData)
+	{
+		return;
+	}
+
+	std::vector<float> tempBuffer(frameCount * 2);
+	ma_uint64 framesRead = 0;
+
+	if (pData->bIsSystemAudio)
+	{
+		// Capture from system audio (loopback)
+		if (pInput == nullptr)
+		{
+			return;
+		}
+
+		// miniaudio already provides the captured audio in pInput
+		auto pInputFloat = static_cast<const float*>(pInput);
+		std::memcpy(tempBuffer.data(), pInputFloat, frameCount * 2 * sizeof(float));
+		framesRead = frameCount;
+
+		// If we are in duplex mode or playback, we might want to copy to pOutput to hear it
+		// But usually loopback capture is enough.
+		if (pOutput)
+		{
+			std::memcpy(pOutput, pInput, frameCount * 2 * sizeof(float));
+		}
+	}
+	else
+	{
+		// Read from decoder
+		if (!pData->pDecoder)
+		{
+			if (pOutput)
+			{
+				std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
+			}
+			return;
+		}
+
+		ma_result result = ma_decoder_read_pcm_frames(pData->pDecoder, tempBuffer.data(), frameCount, &framesRead);
+
+		if (result != MA_SUCCESS || framesRead == 0)
+		{
+			pData->bFinished = true;
+			if (pOutput)
+			{
+				std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
+			}
+			return;
+		}
+
+		// Copy to output (for speakers) - audio plays at 48kHz
+		if (pOutput)
+		{
+			auto* pOutputFloat = static_cast<float*>(pOutput);
+			std::memcpy(pOutputFloat, tempBuffer.data(), framesRead * 2 * sizeof(float));
+
+			if (framesRead < frameCount)
+			{
+				std::memset(&pOutputFloat[framesRead * 2], 0, (frameCount - framesRead) * 2 * sizeof(float));
+			}
+		}
+	}
+
+	// Process for haptics
+	if (!pData->bIsWireless)
+	{
+		// USB: Queue 16-bit stereo samples with high-pass filter
+		for (ma_uint64 i = 0; i < framesRead; ++i)
+		{
+			float inLeft = tempBuffer[i * 2];
+			float inRight = tempBuffer[i * 2 + 1];
+
+			pData->LowPassStateLeft = kOneMinusAlpha * inLeft + kLowPassAlpha * pData->LowPassStateLeft;
+			pData->LowPassStateRight = kOneMinusAlpha * inRight + kLowPassAlpha * pData->LowPassStateRight;
+
+			float outLeft = std::clamp(inLeft - pData->LowPassStateLeft, -1.0f, 1.0f);
+			float outRight = std::clamp(inRight - pData->LowPassStateRight, -1.0f, 1.0f);
+
+			std::vector<int16_t> stereoSample = {
+			    static_cast<int16_t>(outLeft * 32767.0f),
+			    static_cast<int16_t>(outRight * 32767.0f)};
+			pData->usbSampleQueue.Push(stereoSample);
+		}
+	}
+	else
+	{
+		// Add current frames to accumulator with safety limit
+		{
+			std::lock_guard<std::mutex> lock(pData->btAccumulatorMutex);
+			
+			// If accumulator is too large, drop old data (more than 500ms of audio)
+			// 48000 frames/sec * 0.5 sec = 24000 frames
+			const size_t maxAccumulatorFrames = 24000 * 2; 
+			if (pData->btAccumulator.size() > maxAccumulatorFrames)
+			{
+				pData->btAccumulator.clear(); // Clear it for safety if it grows too much
+			}
+
+			for (ma_uint64 i = 0; i < framesRead; ++i)
+			{
+				pData->btAccumulator.push_back(tempBuffer[i * 2]);     // Left
+				pData->btAccumulator.push_back(tempBuffer[i * 2 + 1]); // Right
+			}
+		}
+
+		// Process when we have at least 1024 frames (2048 samples)
+		const size_t requiredSamples = 1024 * 2; // 1024 frames * 2 channels
+
+		while (true)
+		{
+			std::vector<float> framesToProcess;
+
+			{
+				std::lock_guard<std::mutex> lock(pData->btAccumulatorMutex);
+				if (pData->btAccumulator.size() < requiredSamples)
+				{
+					break; // Not enough data yet, exit loop but continue to update framesPlayed
+				}
+
+				// Extract 1024 frames from accumulator
+				framesToProcess.assign(pData->btAccumulator.begin(), pData->btAccumulator.begin() + requiredSamples);
+				pData->btAccumulator.erase(pData->btAccumulator.begin(), pData->btAccumulator.begin() + requiredSamples);
+			}
+
+			// Now resample 1024 frames to 64 frames
+			const float ratio = 3000.0f / 48000.0f; // 0.0625
+			const std::int32_t numInputFrames = 1024;
+
+			std::vector<float> resampledData(128, 0.0f); // 64 frames * 2 channels
+
+			for (std::int32_t outFrame = 0; outFrame < 64; ++outFrame)
+			{
+				float srcPos = static_cast<float>(outFrame) / ratio;
+				std::int32_t srcIndex = static_cast<std::int32_t>(srcPos);
+				float frac = srcPos - static_cast<float>(srcIndex);
+
+				if (srcIndex >= numInputFrames - 1)
+				{
+					srcIndex = numInputFrames - 2;
+					frac = 1.0f;
+				}
+				if (srcIndex < 0)
+				{
+					srcIndex = 0;
+				}
+
+				float left0 = framesToProcess[srcIndex * 2];
+				float left1 = framesToProcess[(srcIndex + 1) * 2];
+				float right0 = framesToProcess[srcIndex * 2 + 1];
+				float right1 = framesToProcess[(srcIndex + 1) * 2 + 1];
+
+				resampledData[outFrame * 2] = left0 + frac * (left1 - left0);
+				resampledData[outFrame * 2 + 1] = right0 + frac * (right1 - right0);
+			}
+
+			// Apply high-pass filter to all 64 frames
+			for (std::int32_t i = 0; i < 64; ++i)
+			{
+				const std::int32_t dataIndex = i * 2;
+
+				float inLeft = resampledData[dataIndex];
+				float inRight = resampledData[dataIndex + 1];
+
+				pData->LowPassStateLeft = kOneMinusAlphaBt * inLeft + kLowPassAlphaBt * pData->LowPassStateLeft;
+				pData->LowPassStateRight = kOneMinusAlphaBt * inRight + kLowPassAlphaBt * pData->LowPassStateRight;
+
+				resampledData[dataIndex] = inLeft - pData->LowPassStateLeft;
+				resampledData[dataIndex + 1] = inRight - pData->LowPassStateRight;
+			}
+
+			// Create Packet1: Frames 0-31 (64 bytes)
+			std::vector<std::int8_t> packet1(64, 0);
+
+			for (std::int32_t i = 0; i < 32; ++i)
+			{
+				const std::int32_t dataIndex = i * 2;
+
+				float leftSample = resampledData[dataIndex];
+				float rightSample = resampledData[dataIndex + 1];
+
+				std::int8_t leftInt8 = static_cast<std::int8_t>(std::clamp(static_cast<int>(std::round(leftSample * 127.0f)), -128, 127));
+				std::int8_t rightInt8 = static_cast<std::int8_t>(std::clamp(static_cast<int>(std::round(rightSample * 127.0f)), -128, 127));
+
+				packet1[dataIndex] = leftInt8;
+				packet1[dataIndex + 1] = rightInt8;
+			}
+
+			// Create Packet2: Frames 32-63 (64 bytes)
+			std::vector<std::int8_t> packet2(64, 0);
+			for (std::int32_t i = 0; i < 32; ++i)
+			{
+				const std::int32_t dataIndex = (i + 32) * 2;
+
+				float leftSample = resampledData[dataIndex];
+				float rightSample = resampledData[dataIndex + 1];
+
+				std::int8_t leftInt8 = static_cast<std::int8_t>(std::clamp(static_cast<int>(std::round(leftSample * 127.0f)), -128, 127));
+				std::int8_t rightInt8 = static_cast<std::int8_t>(std::clamp(static_cast<int>(std::round(rightSample * 127.0f)), -128, 127));
+
+				const std::int32_t packetIndex = i * 2;
+				packet2[packetIndex] = leftInt8;
+				packet2[packetIndex + 1] = rightInt8;
+			}
+
+			// Convert to uint8 and enqueue
+			std::vector<std::uint8_t> packet1Unsigned(packet1.begin(), packet1.end());
+			std::vector<std::uint8_t> packet2Unsigned(packet2.begin(), packet2.end());
+
+			pData->btPacketQueue.Push(packet1Unsigned);
+			pData->btPacketQueue.Push(packet2Unsigned);
+		}
+	}
+
+	pData->framesPlayed += framesRead;
+}
+
+// Consume haptics queue and send to controller
+void ConsumeHapticsQueue(IGamepadAudioHaptics* AudioHaptics, AudioCallbackData& callbackData)
+{
+
+	if (callbackData.bIsWireless)
+	{
+		std::vector<std::uint8_t> packet;
+		while (callbackData.btPacketQueue.Pop(packet))
+		{
+			AudioHaptics->AudioHapticUpdate(packet);
+		}
+	}
+	else
+	{
+		std::vector<std::int16_t> allSamples;
+		allSamples.reserve(2048 * 2);
+
+		std::vector<std::int16_t> stereoSample;
+		while (callbackData.usbSampleQueue.Pop(stereoSample))
+		{
+			if (stereoSample.size() >= 2)
+			{
+				allSamples.push_back(stereoSample[0]);
+				allSamples.push_back(stereoSample[1]);
+			}
+		}
+
+		if (!allSamples.empty())
+		{
+			AudioHaptics->AudioHapticUpdate(allSamples);
+		}
+	}
+}
+
+// Estado global para áudio
+ma_device g_AudioDevice;
+bool g_AudioDeviceInitialized = false;
+AudioCallbackData g_AudioCallbackData;
+
+void AudioLoop()
+{
+    std::cout << "[AppDLL] Audio Loop Started." << std::endl;
+
+	std::vector<uint8_t> BufferTrigger;
+	BufferTrigger.resize(10);
+	BufferTrigger[0] = 0x21;
+	BufferTrigger[1] = 0xfe;
+	BufferTrigger[2] = 0x03;
+	BufferTrigger[3] = 0xf8;
+	BufferTrigger[4] = 0xff;
+	BufferTrigger[5] = 0xff;
+	BufferTrigger[6] = 0x1f;
+	BufferTrigger[7] = 0x00;
+	BufferTrigger[8] = 0x00;
+	BufferTrigger[9] = 0x00;
+
+	ISonyGamepad* Gamepad = g_Registry->GetLibrary(TargetDeviceId);
+	auto Trigger = Gamepad->GetIGamepadTrigger();
+	if (Trigger)
+	{
+		Trigger->SetCustomTrigger(EDSGamepadHand::AnyHand, BufferTrigger);
+	}
+	Gamepad->UpdateOutput();
+
+    while (g_Running)
+    {
+        if (Gamepad && Gamepad->IsConnected())
+        {
+            bool bIsWireless = Gamepad->GetConnectionType() == EDSDeviceConnection::Bluetooth;
+            IGamepadAudioHaptics* AudioHaptics = Gamepad->GetIGamepadHaptics();
+            if (AudioHaptics)
+            {
+                // Configurações do DualSense para Haptics
+                Gamepad->DualSenseSettings(0x10, 0x7C, 0x7C, 0x7C, 0x7C, 0xFC, 0x00, 0x00);
+
+                if (!g_AudioDeviceInitialized || g_AudioCallbackData.bIsWireless != bIsWireless || (g_AudioDeviceInitialized && ma_device_get_state(&g_AudioDevice) == ma_device_state_stopped))
+                {
+                    if (g_AudioDeviceInitialized)
+                    {
+                        ma_device_uninit(&g_AudioDevice);
+                        g_AudioDeviceInitialized = false;
+                        
+                        // Limpa acumuladores e filas ao reiniciar
+                        {
+                            std::lock_guard<std::mutex> lock(g_AudioCallbackData.btAccumulatorMutex);
+                            g_AudioCallbackData.btAccumulator.clear();
+                        }
+                        std::vector<uint8_t> dummy;
+                        while(g_AudioCallbackData.btPacketQueue.Pop(dummy));
+                        std::vector<int16_t> dummy2;
+                        while(g_AudioCallbackData.usbSampleQueue.Pop(dummy2));
+                    }
+
+                    std::cout << "[AppDLL] Initializing Audio Loopback for Haptics (" << (bIsWireless ? "Bluetooth" : "USB") << ")..." << std::endl;
+
+                    // Configura o contexto de áudio para USB se necessário
+                    FDeviceContext* Context = Gamepad->GetMutableDeviceContext();
+                    if (!bIsWireless && Context)
+                    {
+                        if (!Context->AudioContext || !Context->AudioContext->IsValid())
+                        {
+                            IPlatformHardwareInfo::Get().InitializeAudioDevice(Context);
+                        }
+                    }
+
+                    g_AudioCallbackData.bIsSystemAudio = true;
+                    g_AudioCallbackData.bIsWireless = bIsWireless;
+                    g_AudioCallbackData.bFinished = false;
+
+                    ma_device_config deviceConfig = ma_device_config_init(ma_device_type_loopback);
+                    deviceConfig.capture.format = ma_format_f32;
+                    deviceConfig.capture.channels = 2;
+                    deviceConfig.sampleRate = 48000;
+                    deviceConfig.dataCallback = AudioDataCallback;
+                    deviceConfig.pUserData = &g_AudioCallbackData;
+                    deviceConfig.wasapi.loopbackProcessID = 0; // Captura de todos os processos
+
+                    ma_result result = ma_device_init(nullptr, &deviceConfig, &g_AudioDevice);
+                    if (result == MA_SUCCESS)
+                    {
+                        if (ma_device_start(&g_AudioDevice) == MA_SUCCESS)
+                        {
+                            g_AudioDeviceInitialized = true;
+                            std::cout << "[AppDLL] Audio Loopback Started." << std::endl;
+                        }
+                        else
+                        {
+                            ma_device_uninit(&g_AudioDevice);
+                            std::cerr << "[AppDLL] Failed to start audio device." << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "[AppDLL] Failed to initialize audio device (Error: " << result << ")." << std::endl;
+                    }
+                }
+                ConsumeHapticsQueue(AudioHaptics, g_AudioCallbackData);
+            }
+        }
+        else
+        {
+            // Se o controle foi desconectado, para o áudio
+            if (g_AudioDeviceInitialized)
+            {
+                ma_device_uninit(&g_AudioDevice);
+                g_AudioDeviceInitialized = false;
+                std::cout << "[AppDLL] Audio Loopback Stopped (Controller Disconnected)." << std::endl;
+            }
+        }
+
+        // Sleep curto para não consumir muita CPU, mas manter baixa latência
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    // Cleanup final do loop
+    if (g_AudioDeviceInitialized)
+    {
+        ma_device_uninit(&g_AudioDevice);
+        g_AudioDeviceInitialized = false;
+    }
+
+    std::cout << "[AppDLL] Audio Loop Stopped." << std::endl;
+}
+
+
+void InputLoop()
+{
+    std::cout << "[AppDLL] Input Loop Started." << std::endl;
+
+    while (g_Running)
+    {
+        float DeltaTime = 0.006f;
+        g_Registry->PlugAndPlay(DeltaTime);
+
+        ISonyGamepad* Gamepad = g_Registry->GetLibrary(TargetDeviceId);
+
+        if (Gamepad && Gamepad->IsConnected())
+        {
+            Gamepad->UpdateInput(DeltaTime);
+
+            FDeviceContext* DeviceContext = Gamepad->GetMutableDeviceContext();
+            if (DeviceContext)
+            {
+                FInputContext* CurrentState = DeviceContext->GetInputState();
+                if (CurrentState)
+                {
+#ifdef USE_VIGEM
+                    if (g_ViGEmAdapter) {
+                        g_ViGEmAdapter->Update(*CurrentState);
+                    }
+#endif
+                    static int HeartbeatCounter = 0;
+                    if (++HeartbeatCounter % 60 == 0) {
+                        std::cout << "[AppDLL] Input Loop Alive - Cross: " << (CurrentState->bCross ? "YES" : "NO") << std::endl;
+                    }
+                }
+            }
+        }
+        else if (Gamepad)
+        {
+             static int ConnCounter = 0;
+             if (++ConnCounter % 60 == 0) {
+                 std::cout << "[AppDLL] Gamepad Object exists but IsConnected() is FALSE" << std::endl;
+             }
+        }
+        else
+        {
+             static int NullCounter = 0;
+             if (++NullCounter % 60 == 0) {
+                 std::cout << "[AppDLL] Gamepad Object is NULL for ID " << TargetDeviceId << std::endl;
+             }
+        }
+
+        // Aproximadamente 60Hz para leitura de input
+    }
+
+    std::cout << "[AppDLL] Input Loop Stopped." << std::endl;
+}
+
+// Função auxiliar para abrir o console preto do Windows (CMD)
+void CreateConsole() {
+    // Se o console já existir, não faz nada
+    if (GetConsoleWindow() != NULL) {
+        return;
+    }
+    if (AllocConsole()) {
+        FILE* fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        freopen_s(&fp, "CONOUT$", "w", stderr);
+        freopen_s(&fp, "CONIN$", "r", stdin);
+        
+        // Desativa o buffering para ver as mensagens imediatamente
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stderr, NULL, _IONBF, 0);
+
+        std::cout << "[Console] Debug Console Attached!" << std::endl;
+    }
+}
+
+// Wrapper para rodar seu serviço
+void StartServiceThread() {
+    if (g_ServiceInitialized.exchange(true)) return;
+
+    // 1. Cria o console para você ver os logs
+    CreateConsole();
+
+    std::cout << "[AppDLL] Service Thread Starting..." << std::endl;
+    std::cout.flush();
+
+    // Reset last input state to avoid ghost events
+    g_LastInputState = FInputContext();
+
+    // 2. Inicia o Logger
+    // Logger::Initialize(".");
+    
+    std::cout << "[System] Initializing Hardware Layer..." << std::endl;
+    std::cout.flush();
+
+    // 3. Sua lógica de inicialização
+    auto HardwareImpl = std::make_unique<TestHardwareInfo>();
+    IPlatformHardwareInfo::SetInstance(std::move(HardwareImpl));
+
+    g_Registry = std::make_unique<TestDeviceRegistry>();
+    g_Registry->Policy.deviceId = 0; // Initialize deviceId for the policy
+    
+    std::cout << "[System] Requesting Immediate Detection..." << std::endl;
+    std::cout.flush();
+    
+    g_Registry->RequestImmediateDetection();
+    g_Registry->PlugAndPlay(0.5);
+
+#ifdef USE_VIGEM
+    std::cout << "[System] Initializing ViGEm Adapter..." << std::endl;
+    g_ViGEmAdapter = std::make_unique<ViGEmAdapter>();
+    if (!g_ViGEmAdapter->Initialize()) {
+        std::cerr << "[System] ViGEm Adapter failed to initialize. Xbox Emulation will not be available." << std::endl;
+    }
+#endif
+
+    std::cout << "[System] Waiting for controller connection via USB/BT..." << std::endl;
+    std::cout.flush();
+    
+    g_Running = true;
+    
+    std::cout << "[AppDLL] Gamepad Service Started." << std::endl;
+    std::cout.flush();
+    
+    // Inicia a thread de áudio
+    g_AudioThread = std::thread(AudioLoop);
+
+    InputLoop();
+    
+    // Cleanup
+    if (g_AudioThread.joinable())
+    {
+        g_AudioThread.join();
+    }
+
+#ifdef USE_VIGEM
+    if (g_ViGEmAdapter) {
+        g_ViGEmAdapter->Shutdown();
+        g_ViGEmAdapter.reset();
+    }
+#endif
+
+    if (g_Registry) g_Registry.reset();
+    // Logger::Shutdown();
+    
+    std::cout << "[AppDLL] Gamepad Service Stopped." << std::endl;
+    std::cout.flush();
+    g_ServiceInitialized = false;
+}
+
+extern "C" {
+
+    __declspec(dllexport) void StartGamepadService()
+    {
+        // Se já estiver rodando ou inicializado, não faz nada
+        if (g_Running || g_ServiceInitialized)
+        {
+            return;
+        }
+
+        // Se já houver uma thread, garante que ela seja limpa antes de iniciar outra (raro)
+        if (g_ServiceThread.joinable())
+        {
+            g_ServiceThread.detach();
+        }
+
+        g_ServiceThread = std::thread(StartServiceThread);
+    }
+
+    __declspec(dllexport) void StopGamepadService()
+    {
+        g_Running = false;
+    }
+
+	__declspec(dllexport) bool GetGamepadStateSafe(int ControllerId, FInputContext* OutState)
+    {
+        if (!OutState) return false;
+        if (!g_Registry) return false;
+    	
+    	ISonyGamepad* Gamepad = g_Registry->GetLibrary(ControllerId);
+    	if (Gamepad && Gamepad->IsConnected())
+    	{
+    		FDeviceContext* DeviceContext = Gamepad->GetMutableDeviceContext();
+    		if (DeviceContext)
+    		{
+    			FInputContext* InState = DeviceContext->GetInputState();
+                if (!InState) return false;
+                
+                // Cópia manual campo a campo para evitar problemas de alinhamento se structs forem diferentes
+    			OutState->bCross = InState->bCross;
+    			OutState->bCircle = InState->bCircle;
+    			OutState->bTriangle = InState->bTriangle;
+    			OutState->bSquare = InState->bSquare;
+    			OutState->bDpadDown = InState->bDpadDown;
+    			OutState->bDpadLeft = InState->bDpadLeft;
+    			OutState->bDpadRight = InState->bDpadRight;
+    			OutState->bDpadUp = InState->bDpadUp;
+    			OutState->RightAnalog = InState->RightAnalog;
+    			OutState->LeftAnalog = InState->LeftAnalog;
+    			OutState->bLeftAnalogDown = InState->bLeftAnalogDown;
+    			OutState->bLeftAnalogLeft = InState->bLeftAnalogLeft;
+    			OutState->bLeftAnalogRight = InState->bLeftAnalogRight;
+    			OutState->bLeftAnalogUp = InState->bLeftAnalogUp;
+                OutState->bRightAnalogDown = InState->bRightAnalogDown;
+                OutState->bRightAnalogLeft = InState->bRightAnalogLeft;
+                OutState->bRightAnalogRight = InState->bRightAnalogRight;
+                OutState->bRightAnalogUp = InState->bRightAnalogUp;
+    			OutState->bLeftShoulder = InState->bLeftShoulder;
+    			OutState->bRightShoulder = InState->bRightShoulder;
+    			OutState->LeftTriggerAnalog = InState->LeftTriggerAnalog;
+    			OutState->RightTriggerAnalog = InState->RightTriggerAnalog;
+    			OutState->bLeftTriggerThreshold = InState->bLeftTriggerThreshold;
+    			OutState->bRightTriggerThreshold = InState->bRightTriggerThreshold;
+    			OutState->bStart = InState->bStart;
+    			OutState->bShare = InState->bShare;
+    			OutState->bMute = InState->bMute;
+    			OutState->bPSButton = InState->bPSButton;
+    			OutState->bTouch = InState->bTouch;
+                OutState->bLeftStick = InState->bLeftStick;
+                OutState->bRightStick = InState->bRightStick;
+                OutState->BatteryLevel = InState->BatteryLevel;
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+}
+
+#ifndef BUILDING_PROXY_DLL
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    	StartGamepadService();
+        // Não iniciamos a thread aqui para evitar problemas de carregamento
+        // O serviço será iniciado sob demanda via XInputGetState -> StartGamepadService
+        break;
+
+    case DLL_PROCESS_DETACH:
+        g_Running = false;
+        
+        if (lpReserved == nullptr) { // FreeLibrary chamada manualmente
+            if (g_AudioThread.joinable()) g_AudioThread.detach();
+            if (g_ServiceThread.joinable()) g_ServiceThread.detach();
+        }
+
+        g_ServiceInitialized = false;
+        break;
+    }
+    return TRUE;
+}
+#endif

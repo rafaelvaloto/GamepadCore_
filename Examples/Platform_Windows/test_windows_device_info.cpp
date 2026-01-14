@@ -165,15 +165,30 @@ bool Ftest_windows_device_info::CreateHandle(FDeviceContext* DeviceContext)
 	std::wstring MyStdString = std::filesystem::path(Source).wstring();
 	const HANDLE DeviceHandle = CreateFileW(
 	    MyStdString.data(),
-	    GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+	    GENERIC_READ | GENERIC_WRITE,
+	    FILE_SHARE_READ | FILE_SHARE_WRITE,
+	    nullptr,
+	    OPEN_EXISTING,
+	    0,
+	    nullptr);
 
-	if (DeviceHandle == INVALID_PLATFORM_HANDLE)
+	if (DeviceHandle == INVALID_HANDLE_VALUE)
 	{
-		DeviceContext->Handle = DeviceHandle;
+		DeviceContext->Handle = INVALID_PLATFORM_HANDLE;
 		return false;
 	}
 
-	DeviceContext->Handle = DeviceHandle;
+    // Tentar duplicar o handle para garantir persistência (opcional, mais para segurança interna)
+    HANDLE DuplicatedHandle = INVALID_HANDLE_VALUE;
+    if (DuplicateHandle(GetCurrentProcess(), DeviceHandle, GetCurrentProcess(), &DuplicatedHandle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+    {
+        CloseHandle(DeviceHandle);
+        DeviceContext->Handle = DuplicatedHandle;
+    }
+    else
+    {
+        DeviceContext->Handle = DeviceHandle;
+    }
 	ConfigureFeatures(DeviceContext);
 	return true;
 }

@@ -57,6 +57,16 @@ add_executable(tests-audio-haptics
         ${PLATFORM_SOURCES}
 )
 
+# App DLL Integration Test - Loads GamepadCoreApp.dll dynamically
+add_executable(tests-app-dll
+        Features/dll/app-dll-scope-input.test.cpp
+)
+
+# App DLL Haptics Scope Test
+add_executable(tests-app-dll-haptics
+        Features/dll/app-dll-scope-haptics.test.cpp
+)
+
 # 3. Configure Includes
 # The test needs to find Core and Examples headers (where Policies are)
 set(COMMON_INCLUDES
@@ -69,6 +79,8 @@ set(COMMON_INCLUDES
 
 target_include_directories(tests-adaptive-triggers PRIVATE ${COMMON_INCLUDES})
 target_include_directories(tests-audio-haptics PRIVATE ${COMMON_INCLUDES})
+target_include_directories(tests-app-dll PRIVATE ${COMMON_INCLUDES})
+target_include_directories(tests-app-dll-haptics PRIVATE ${COMMON_INCLUDES})
 
 # Add project root path as a compile definition
 target_compile_definitions(tests-audio-haptics PRIVATE GAMEPAD_CORE_PROJECT_ROOT="${CMAKE_SOURCE_DIR}")

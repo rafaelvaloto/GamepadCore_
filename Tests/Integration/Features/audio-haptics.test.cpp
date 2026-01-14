@@ -91,6 +91,7 @@ private:
 struct AudioCallbackData
 {
 	ma_decoder* pDecoder = nullptr;
+	bool bIsSystemAudio = false;
 	float LowPassStateLeft = 0.0f;
 	float LowPassStateRight = 0.0f;
 	std::atomic<bool> bFinished{false};
@@ -107,35 +108,72 @@ struct AudioCallbackData
 };
 
 // Audio callback - plays audio on speakers and queues haptics data
-void AudioDataCallback(ma_device* pDevice, void* pOutput, const void*, ma_uint32 frameCount)
+void AudioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
 	auto* pData = static_cast<AudioCallbackData*>(pDevice->pUserData);
-	if (!pData || !pData->pDecoder)
+	if (!pData)
 	{
-		std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
 		return;
 	}
 
-	// Read from decoder
-	ma_uint64 framesRead = 0;
 	std::vector<float> tempBuffer(frameCount * 2);
+	ma_uint64 framesRead = 0;
 
-	ma_result result = ma_decoder_read_pcm_frames(pData->pDecoder, tempBuffer.data(), frameCount, &framesRead);
-
-	if (result != MA_SUCCESS || framesRead == 0)
+	if (pData->bIsSystemAudio)
 	{
-		pData->bFinished = true;
-		std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
-		return;
+		// Capture from system audio (loopback)
+		if (pInput == nullptr)
+		{
+			return;
+		}
+
+		// miniaudio already provides the captured audio in pInput
+		const float* pInputFloat = static_cast<const float*>(pInput);
+		std::memcpy(tempBuffer.data(), pInputFloat, frameCount * 2 * sizeof(float));
+		framesRead = frameCount;
+
+		// If we are in duplex mode or playback, we might want to copy to pOutput to hear it
+		// But usually loopback capture is enough.
+		if (pOutput)
+		{
+			std::memcpy(pOutput, pInput, frameCount * 2 * sizeof(float));
+		}
 	}
-
-	// Copy to output (for speakers) - audio plays at 48kHz
-	auto* pOutputFloat = static_cast<float*>(pOutput);
-	std::memcpy(pOutputFloat, tempBuffer.data(), framesRead * 2 * sizeof(float));
-
-	if (framesRead < frameCount)
+	else
 	{
-		std::memset(&pOutputFloat[framesRead * 2], 0, (frameCount - framesRead) * 2 * sizeof(float));
+		// Read from decoder
+		if (!pData->pDecoder)
+		{
+			if (pOutput)
+			{
+				std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
+			}
+			return;
+		}
+
+		ma_result result = ma_decoder_read_pcm_frames(pData->pDecoder, tempBuffer.data(), frameCount, &framesRead);
+
+		if (result != MA_SUCCESS || framesRead == 0)
+		{
+			pData->bFinished = true;
+			if (pOutput)
+			{
+				std::memset(pOutput, 0, frameCount * pDevice->playback.channels * ma_get_bytes_per_sample(pDevice->playback.format));
+			}
+			return;
+		}
+
+		// Copy to output (for speakers) - audio plays at 48kHz
+		if (pOutput)
+		{
+			auto* pOutputFloat = static_cast<float*>(pOutput);
+			std::memcpy(pOutputFloat, tempBuffer.data(), framesRead * 2 * sizeof(float));
+
+			if (framesRead < frameCount)
+			{
+				std::memset(&pOutputFloat[framesRead * 2], 0, (frameCount - framesRead) * 2 * sizeof(float));
+			}
+		}
 	}
 
 	// Process for haptics
@@ -342,15 +380,12 @@ void PrintHelp()
 int main(int argc, char* argv[])
 {
 	std::string WavFilePath;
+	bool bUseSystemAudio = false;
 
 	if (argc < 2)
 	{
-#ifdef GAMEPAD_CORE_PROJECT_ROOT
-		WavFilePath = std::string(GAMEPAD_CORE_PROJECT_ROOT) + "/Tests/Integration/Datasets/ES_Touch_SCENE.wav";
-#else
-		WavFilePath = "Tests/Integration/Datasets/ES_Touch_SCENE.wav";
-#endif
-		std::cout << "[System] No WAV file provided. Using default: " << WavFilePath << std::endl;
+		bUseSystemAudio = true;
+		std::cout << "[System] No WAV file provided. Using System Audio Loopback." << std::endl;
 	}
 	else
 	{
@@ -358,26 +393,35 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout << "[System] Audio Haptics Integration Test" << std::endl;
-	std::cout << "[System] Loading WAV file: " << WavFilePath << std::endl;
 
-	// Initialize decoder (output as float, stereo, 48kHz)
 	ma_decoder decoder;
-	ma_decoder_config decoderConfig = ma_decoder_config_init(ma_format_f32, 2, 48000);
+	ma_uint64 totalFrames = 0;
 
-	if (ma_decoder_init_file(WavFilePath.c_str(), &decoderConfig, &decoder) != MA_SUCCESS)
+	if (!bUseSystemAudio)
 	{
-		std::cerr << "[Error] Failed to load WAV file: " << WavFilePath << std::endl;
-		return 1;
+		std::cout << "[System] Loading WAV file: " << WavFilePath << std::endl;
+
+		// Initialize decoder (output as float, stereo, 48kHz)
+		ma_decoder_config decoderConfig = ma_decoder_config_init(ma_format_f32, 2, 48000);
+
+		if (ma_decoder_init_file(WavFilePath.c_str(), &decoderConfig, &decoder) != MA_SUCCESS)
+		{
+			std::cerr << "[Error] Failed to load WAV file: " << WavFilePath << std::endl;
+			return 1;
+		}
+
+		ma_decoder_get_length_in_pcm_frames(&decoder, &totalFrames);
+
+		std::cout << "[WavReader] Loaded WAV file successfully:" << std::endl;
+		std::cout << "  - Sample Rate: " << decoder.outputSampleRate << " Hz" << std::endl;
+		std::cout << "  - Channels: " << decoder.outputChannels << std::endl;
+		std::cout << "  - Total Frames: " << totalFrames << std::endl;
+		std::cout << "  - Duration: " << (static_cast<float>(totalFrames) / decoder.outputSampleRate) << " seconds" << std::endl;
 	}
-
-	ma_uint64 totalFrames;
-	ma_decoder_get_length_in_pcm_frames(&decoder, &totalFrames);
-
-	std::cout << "[WavReader] Loaded WAV file successfully:" << std::endl;
-	std::cout << "  - Sample Rate: " << decoder.outputSampleRate << " Hz" << std::endl;
-	std::cout << "  - Channels: " << decoder.outputChannels << std::endl;
-	std::cout << "  - Total Frames: " << totalFrames << std::endl;
-	std::cout << "  - Duration: " << (static_cast<float>(totalFrames) / decoder.outputSampleRate) << " seconds" << std::endl;
+	else
+	{
+		std::cout << "[System] Mode: System Audio Capture (Press Ctrl+C to stop)" << std::endl;
+	}
 
 	// Initialize Hardware Layer
 	std::cout << "[System] Initializing Hardware Layer..." << std::endl;
@@ -446,13 +490,27 @@ int main(int argc, char* argv[])
 
 			// Setup callback data
 			AudioCallbackData callbackData;
-			callbackData.pDecoder = &decoder;
+			callbackData.pDecoder = bUseSystemAudio ? nullptr : &decoder;
+			callbackData.bIsSystemAudio = bUseSystemAudio;
 			callbackData.bIsWireless = bIsWireless;
 
 			// Initialize playback device (default speakers at 48kHz)
-			ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
-			deviceConfig.playback.format = ma_format_f32;
-			deviceConfig.playback.channels = 2;
+			ma_device_config deviceConfig;
+			if (bUseSystemAudio)
+			{
+				deviceConfig = ma_device_config_init(ma_device_type_loopback);
+				deviceConfig.capture.format = ma_format_f32;
+				deviceConfig.capture.channels = 2;
+				deviceConfig.capture.pDeviceID = nullptr; // Default
+				deviceConfig.wasapi.loopbackProcessID = 0; // Capture from all processes
+			}
+			else
+			{
+				deviceConfig = ma_device_config_init(ma_device_type_playback);
+				deviceConfig.playback.format = ma_format_f32;
+				deviceConfig.playback.channels = 2;
+			}
+
 			deviceConfig.sampleRate = 48000;
 			deviceConfig.dataCallback = AudioDataCallback;
 			deviceConfig.pUserData = &callbackData;
@@ -460,20 +518,28 @@ int main(int argc, char* argv[])
 			ma_device device;
 			if (ma_device_init(nullptr, &deviceConfig, &device) != MA_SUCCESS)
 			{
-				std::cerr << "[Error] Failed to initialize audio playback device." << std::endl;
-				ma_decoder_uninit(&decoder);
+				std::cerr << "[Error] Failed to initialize audio device." << std::endl;
+				if (!bUseSystemAudio) ma_decoder_uninit(&decoder);
 				return 1;
 			}
 
-			std::cout << "[AudioPlayback] Playing on: " << device.playback.name << std::endl;
-			std::cout << "[System] Starting audio haptics playback..." << std::endl;
+			if (bUseSystemAudio)
+			{
+				std::cout << "[AudioCapture] Capturing from: " << device.capture.name << " (Loopback)" << std::endl;
+			}
+			else
+			{
+				std::cout << "[AudioPlayback] Playing on: " << device.playback.name << std::endl;
+			}
 
-			// Start playback
+			std::cout << "[System] Starting audio haptics..." << std::endl;
+
+			// Start playback/capture
 			if (ma_device_start(&device) != MA_SUCCESS)
 			{
-				std::cerr << "[Error] Failed to start audio playback." << std::endl;
+				std::cerr << "[Error] Failed to start audio device." << std::endl;
 				ma_device_uninit(&device);
-				ma_decoder_uninit(&decoder);
+				if (!bUseSystemAudio) ma_decoder_uninit(&decoder);
 				return 1;
 			}
 
@@ -484,8 +550,16 @@ int main(int argc, char* argv[])
 				ConsumeHapticsQueue(AudioHaptics, callbackData);
 
 				// Print progress
-				float progress = (static_cast<float>(callbackData.framesPlayed) / totalFrames) * 100.0f;
-				std::cout << "\r[Playing] " << std::fixed << std::setprecision(1) << progress << "%" << std::flush;
+				if (!bUseSystemAudio)
+				{
+					float progress = (static_cast<float>(callbackData.framesPlayed) / totalFrames) * 100.0f;
+					std::cout << "\r[Playing] " << std::fixed << std::setprecision(1) << progress << "%" << std::flush;
+				}
+				else
+				{
+					std::cout << "\r[Capturing System Audio...] " << std::flush;
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				}
 			}
 
 			// Final consume to empty queues

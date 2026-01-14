@@ -322,10 +322,10 @@ public:
 		return *this;
 	}
 
-	FInputContext GetInputState()
+	FInputContext* GetInputState()
 	{
 		std::lock_guard<std::mutex> Lock(InputMutex);
-		return InputGameThread;
+		return &InputGameThread;
 	}
 
 	// [BackgroundThread]

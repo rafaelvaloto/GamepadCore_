@@ -32,7 +32,7 @@ namespace GamepadCore
 		std::unordered_map<typename DeviceRegistryPolicy::EngineIdType, std::shared_ptr<ISonyGamepad>, typename DeviceRegistryPolicy::Hasher> LibraryInstances;
 
 		float TimeAccumulator = 0.0f;
-		const float DetectionInterval = 2.0f;
+		const float DetectionInterval = 1.0f;
 
 	public:
 		DeviceRegistryPolicy Policy;

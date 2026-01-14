@@ -33,7 +33,7 @@ void SonyGamepadAbstract::EnableMotionSensor(bool bIsMotionSensor)
 
 float SonyGamepadAbstract::GetBattery()
 {
-	return HIDDeviceContexts.GetInputState().BatteryLevel;
+	return HIDDeviceContexts.GetInputState()->BatteryLevel;
 }
 
 bool SonyGamepadAbstract::IsConnected()
