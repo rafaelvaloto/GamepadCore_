@@ -95,27 +95,27 @@ int main()
 
 			Gamepad->UpdateInput(DeltaTime);
 			FDeviceContext* Context = Gamepad->GetMutableDeviceContext();
-			FInputContext InputState = Context->GetInputState();
+			FInputContext* InputState = Context->GetInputState();
 
 			auto Trigger = Gamepad->GetIGamepadTrigger();
 
 			std::string StatusText;
 
 			// --- Face Buttons Logic ---
-			if (InputState.bCross)
+			if (InputState->bCross)
 			{
 				StatusText = "Cross";
 				Gamepad->SetVibration(0, 200);
 				Gamepad->SetLightbar({255, 0, 0}); // Red
 			}
-			else if (InputState.bCircle)
+			else if (InputState->bCircle)
 			{
 				StatusText = "Circle";
 				Gamepad->SetVibration(100, 0);
 				Gamepad->SetLightbar({0, 0, 255}); // Blue
 			}
 			// --- Adaptive Triggers Logic (R2) ---
-			else if (InputState.bSquare)
+			else if (InputState->bSquare)
 			{
 				StatusText = "Trigger R: GameCube (0x02)";
 				if (Trigger)
@@ -124,7 +124,7 @@ int main()
 				}
 			}
 			// --- D-PAD LOGIC ---
-			else if (InputState.bDpadUp)
+			else if (InputState->bDpadUp)
 			{
 				BufferTrigger[0] = 0x21;
 				BufferTrigger[1] = 0xfe;
@@ -143,7 +143,7 @@ int main()
 					Trigger->SetCustomTrigger(EDSGamepadHand::Left, BufferTrigger);
 				}
 			}
-			else if (InputState.bDpadDown)
+			else if (InputState->bDpadDown)
 			{
 				BufferTrigger[0] = 0x22;
 				BufferTrigger[1] = 0x02;
@@ -163,7 +163,7 @@ int main()
 					Trigger->SetCustomTrigger(EDSGamepadHand::Right, BufferTrigger);
 				}
 			}
-			else if (InputState.bLeftShoulder)
+			else if (InputState->bLeftShoulder)
 			{
 				BufferTrigger[0] = 0x23;
 				BufferTrigger[1] = 0x82;
@@ -183,7 +183,7 @@ int main()
 					Trigger->SetCustomTrigger(EDSGamepadHand::Left, BufferTrigger);
 				}
 			}
-			else if (InputState.bRightShoulder)
+			else if (InputState->bRightShoulder)
 			{
 				BufferTrigger[0] = 0x27;
 				BufferTrigger[1] = 0x80;
@@ -203,7 +203,7 @@ int main()
 					Trigger->SetCustomTrigger(EDSGamepadHand::Right, BufferTrigger);
 				}
 			}
-			else if (InputState.bDpadLeft)
+			else if (InputState->bDpadLeft)
 			{
 				BufferTrigger[0] = 0x25;
 				BufferTrigger[1] = 0x08;
@@ -223,7 +223,7 @@ int main()
 					Trigger->SetCustomTrigger(EDSGamepadHand::Right, BufferTrigger);
 				}
 			}
-			else if (InputState.bDpadRight)
+			else if (InputState->bDpadRight)
 			{
 				StatusText = "Trigger R: AutomaticGun (0x26)";
 				if (Trigger)
@@ -232,7 +232,7 @@ int main()
 				}
 			}
 			// --- RESET ---
-			else if (InputState.bTriangle)
+			else if (InputState->bTriangle)
 			{
 				StatusText = "Triangle";
 				bWasDebugAnalog = !bWasDebugAnalog;

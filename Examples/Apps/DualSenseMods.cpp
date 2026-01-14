@@ -1,4 +1,6 @@
-﻿#include <windows.h>
+﻿#if defined(_WIN32) && defined(USE_VIGEM)
+
+#include <windows.h>
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -755,4 +757,5 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     }
     return TRUE;
 }
-#endif
+
+#endif // _WIN32 && USE_VIGEM

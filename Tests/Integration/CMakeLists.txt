@@ -57,12 +57,12 @@ add_executable(tests-audio-haptics
         ${PLATFORM_SOURCES}
 )
 
-# App DLL Integration Test - Loads GamepadCoreApp.dll dynamically
+# Apps DLL Integration Test - Loads GamepadCoreApp.dll dynamically
 add_executable(tests-app-dll
         Features/dll/app-dll-scope-input.test.cpp
 )
 
-# App DLL Haptics Scope Test
+# Apps DLL Haptics Scope Test
 add_executable(tests-app-dll-haptics
         Features/dll/app-dll-scope-haptics.test.cpp
 )

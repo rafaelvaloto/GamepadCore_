@@ -1,4 +1,5 @@
-﻿#include <windows.h>
+﻿#if defined(_WIN32) && defined(USE_VIGEM)
+#include <windows.h>
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -150,3 +151,4 @@ int main()
 
     return 0;
 }
+#endif

@@ -17,11 +17,12 @@ endif()
 add_definitions(-DBUILD_GAMEPAD_CORE_TESTS)
 
 
-add_subdirectory(App)
+add_subdirectory(Examples/Apps)
 add_subdirectory(Source)
 
 # Option to enable or disable integration tests (default is ON)
 option(BUILD_TESTS "Build integration tests" ON)
+option(USE_VIGEM "Enable ViGEm support" OFF)
 
 if(BUILD_TESTS)
     # Process the integration tests folder
