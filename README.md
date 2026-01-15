@@ -139,8 +139,6 @@ A native O3DE Gem that brings DualSense and DualShock 4 support to the Open 3D E
 - ✅ Native O3DE EBus system integration
 - ✅ Blueprint-compatible scripting bindings
 
----
-
 ### 🧩 Godot Engine — Prototype Integration
 
 **[Godot-Dualsense](https://github.com/rafaelvaloto/Godot-Dualsense)** (GDExtension for Godot 4.x)
