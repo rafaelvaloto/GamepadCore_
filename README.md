@@ -112,6 +112,12 @@ Built for high-performance engines where every millisecond counts.
 
 Gamepad-Core is **production-ready** and powers projects used by thousands of users.
 
+### 🛹 Session: Skate Sim Mod (Special Edition)
+A specialized implementation tailored for *Session: Skate Sim*, demonstrating the library's ability to enhance gameplay physics.
+* **Truck Physics on Triggers:** Adaptive triggers stiffen dynamically to simulate truck resistance while turning.
+* **Haptic Texture:** Audio-based haptics allow players to "feel" the pop, landing, and grind friction.
+* [🔗 Link to the Mod Repository](https://github.com/rafaelvaloto/Gaming-Mods-Dualsense)
+
 ### 🏆 Unreal Engine — Primary Integration
 **[Unreal-Dualsense](https://github.com/rafaelvaloto/Unreal-Dualsense/tree/v2.0.0-pre-release)** (v2.0.0-pre-release)
 
@@ -119,12 +125,6 @@ The flagship plugin bringing native DualSense support to UE5 via Blueprint and C
 * ✅ Live Adaptive Trigger prototyping via Data Tables.
 * ✅ Real-time Audio-to-Haptics submix processing.
 * ✅ Native Input System integration for Force Feedback & Motion.
-
-### 🛹 Session: Skate Sim Mod (Special Edition)
-A specialized implementation tailored for *Session: Skate Sim*, demonstrating the library's ability to enhance gameplay physics.
-* **Truck Physics on Triggers:** Adaptive triggers stiffen dynamically to simulate truck resistance while turning.
-* **Haptic Texture:** Audio-based haptics allow players to "feel" the pop, landing, and grind friction.
-* [🔗 Link to the Mod Repository](https://github.com/rafaelvaloto/Gaming-Mods-Dualsense)
 
 ### ⚙️ O3DE (Open 3D Engine) — Gem Integration
 
