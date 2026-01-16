@@ -6,41 +6,47 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(WIN32 AND USE_VIGEM)
-    set(MOD_SOURCES
-            gaming-mods.cpp
-            ../Platform_Windows/test_windows_device_info.cpp
-            ../Platform_Windows/ViGEmAdapter/ViGEmAdapter.cpp
-    )
+    set(VIGEM_CLIENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Platform_Windows/ViGEmAdapter/ViGEmClient-master")
+    
+    if(EXISTS "${VIGEM_CLIENT_DIR}/CMakeLists.txt")
+        set(MOD_SOURCES
+                gaming-mods.cpp
+                ../Platform_Windows/test_windows_device_info.cpp
+                ../Platform_Windows/ViGEmAdapter/ViGEmAdapter.cpp
+        )
 
-    add_subdirectory(../Platform_Windows/ViGEmAdapter/ViGEmClient-master ViGEmClient)
+        add_subdirectory("${VIGEM_CLIENT_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/ViGEmClient")
 
-    add_library(gaming-mods SHARED ${MOD_SOURCES})
+        add_library(gaming-mods SHARED ${MOD_SOURCES})
 
-    target_include_directories(gaming-mods PRIVATE
-            ../Platform_Windows/ViGEmAdapter/ViGEmClient-master/include
-    )
+        target_include_directories(gaming-mods PRIVATE
+                "${VIGEM_CLIENT_DIR}/include"
+        )
 
-    target_compile_definitions(gaming-mods PRIVATE
-        BUILD_GAMEPAD_CORE_TESTS
-        USE_VIGEM
-    )
+        target_compile_definitions(gaming-mods PRIVATE
+            BUILD_GAMEPAD_CORE_TESTS
+            USE_VIGEM
+        )
 
-    target_link_libraries(gaming-mods PRIVATE
-            GamepadCore
-            Setupapi
-            Hid
-            dxgi
-            ole32
-            oleaut32
-            uuid
-            winmm
-            ViGEmClient::ViGEmClient
-    )
+        target_link_libraries(gaming-mods PRIVATE
+                GamepadCore
+                Setupapi
+                Hid
+                dxgi
+                ole32
+                oleaut32
+                uuid
+                winmm
+                ViGEmClient::ViGEmClient
+        )
 
-    set_target_properties(gaming-mods PROPERTIES
-            OUTPUT_NAME "gaming-mods"
-            PREFIX ""
-    )
+        set_target_properties(gaming-mods PROPERTIES
+                OUTPUT_NAME "GamepadCoreApp"
+                PREFIX ""
+        )
+    else()
+        message(STATUS "gaming-mods is disabled (ViGEmClient-master not found at ${VIGEM_CLIENT_DIR})")
+    endif()
 else()
     message(STATUS "gaming-mods is disabled (requires Windows and USE_VIGEM=ON)")
 endif()

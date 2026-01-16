@@ -1,4 +1,5 @@
-﻿#if defined(_WIN32) && defined(USE_VIGEM)
+﻿#ifdef BUILD_GAMEPAD_CORE_TESTS
+#if defined(_WIN32) && defined(USE_VIGEM)
 #include "ViGEmAdapter.h"
 #include <iostream>
 #include <algorithm>
@@ -118,3 +119,4 @@ void ViGEmAdapter::Update(const FInputContext& context) {
 
 } // namespace GamepadCore
 #endif // _WIN32 && USE_VIGEM
+#endif // BUILD_GAMEPAD_CORE_TESTS

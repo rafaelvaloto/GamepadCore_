@@ -1,4 +1,5 @@
 ﻿#pragma once
+#ifdef BUILD_GAMEPAD_CORE_TESTS
 #if defined(_WIN32) && defined(USE_VIGEM)
 
 #include <windows.h>
@@ -26,3 +27,4 @@ private:
 } // namespace GamepadCore
 
 #endif // _WIN32 && USE_VIGEM
+#endif //BUILD_GAMEPAD_CORE_TESTS
