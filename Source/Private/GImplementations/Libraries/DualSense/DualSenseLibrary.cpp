@@ -123,8 +123,6 @@ bool FDualSenseLibrary::Initialize(const FDeviceContext& Context)
 		DSContext->BufferAudio[9] = 105;
 		return true;
 	}
-
-	ResetLights();
 	return true;
 }
 
@@ -191,8 +189,8 @@ void FDualSenseLibrary::DualSenseSettings(std::uint8_t bIsMic, std::uint8_t bIsH
 		Context->Output.Audio.Mode = 0x31;
 	}
 
-	Context->Output.Feature = {RumbleMode, RumbleReduce, TriggerReduce};
-	UpdateOutput();
+	std::uint8_t FeatureMode = 0x55;
+	Context->Output.Feature = {FeatureMode, RumbleMode, RumbleReduce, TriggerReduce};
 }
 
 void FDualSenseLibrary::UpdateOutput()
