@@ -40,6 +40,25 @@
 > std::memset(RawOutput, 0, 78); // 78 is the default output buffer size
 > ```
 
+## 🎮 Release v0.0.12
+
+> [!IMPORTANT]
+> **After calling any effect event on the controller (lights, triggers, vibrations, etc.), it is always necessary to call `Gamepad->UpdateOutput()` to apply the changes.**
+
+Example:
+```cpp
+// Set LED color
+gamepad->SetLightbar(255, 0, 0);
+
+// Set trigger effect
+gamepad->SetResistance(TriggerEffect:: Resistance, ... );
+
+// Apply vibration
+gamepad->SetVibration(0.5f, 0.5f);
+
+// ⚠️ REQUIRED: Update output to apply all changes
+gamepad->UpdateOutput();
+```
 
 ## 🚀 What is Gamepad-Core? 
 
