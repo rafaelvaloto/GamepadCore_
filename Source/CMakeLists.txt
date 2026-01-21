@@ -23,23 +23,12 @@ add_library(GamepadCore STATIC
         Public/GImplementations/Utils/GamepadAudio.h
 )
 
-# --- APAGUE OU COMENTE ESTE BLOCO (Versão DLL desnecessária que causa conflito) ---
-# add_library(GamepadCoreDLL SHARED
-#         ${GAMEPADCORE_HEADERS}
-#         ${GAMEPADCORE_SOURCES}
-#         Public/GImplementations/Utils/GamepadAudio.h
-# )
-
 target_include_directories(GamepadCore
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/Public"
         PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/Private"
 )
-
-# --- APAGUE AS REFERÊNCIAS AO DLL ---
-# target_include_directories(GamepadCoreDLL ... )
-# target_compile_features(GamepadCoreDLL ... )
 
 target_compile_features(GamepadCore PUBLIC cxx_std_20)
 

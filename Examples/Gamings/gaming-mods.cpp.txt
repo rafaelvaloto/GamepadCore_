@@ -1,4 +1,4 @@
-﻿#if defined(_WIN32) && defined(USE_VIGEM)
+﻿#if defined(_WIN32)
 #include "GImplementations/Utils/GamepadAudio.h"
 #include <atomic>
 #include <iostream>
@@ -17,10 +17,6 @@ using namespace FGamepadAudio;
 #include "GCore/Templates/TGenericHardwareInfo.h"
 #include "GCore/Types/Structs/Context/DeviceContext.h"
 
-#ifdef USE_VIGEM
-#include "../Platform_Windows/ViGEmAdapter/ViGEmAdapter.h"
-#endif
-
 #if _WIN32
 #include "../Platform_Windows/test_windows_hardware_policy.h"
 using TestHardwarePolicy = Ftest_windows_platform::Ftest_windows_hardware_policy;
@@ -35,9 +31,6 @@ std::atomic<bool> g_ServiceInitialized(false);
 std::thread g_ServiceThread;
 std::thread g_AudioThread;
 std::unique_ptr<TestDeviceRegistry> g_Registry;
-#ifdef USE_VIGEM
-std::unique_ptr<ViGEmAdapter> g_ViGEmAdapter;
-#endif
 FInputContext g_LastInputState;
 const int32_t TargetDeviceId = 0;
 
@@ -477,12 +470,6 @@ void InputLoop()
 				FInputContext* CurrentState = DeviceContext->GetInputState();
 				if (CurrentState)
 				{
-#ifdef USE_VIGEM
-					if (g_ViGEmAdapter)
-					{
-						g_ViGEmAdapter->Update(*CurrentState);
-					}
-#endif
 					static int HeartbeatCounter = 0;
 					if (++HeartbeatCounter % 60 == 0)
 					{
@@ -561,15 +548,6 @@ void StartServiceThread()
 	g_Registry->RequestImmediateDetection();
 	g_Registry->PlugAndPlay(0.5);
 
-#ifdef USE_VIGEM
-	std::cout << "[System] Initializing ViGEm Adapter..." << std::endl;
-	g_ViGEmAdapter = std::make_unique<ViGEmAdapter>();
-	if (!g_ViGEmAdapter->Initialize())
-	{
-		std::cerr << "[System] ViGEm Adapter failed to initialize. Xbox Emulation will not be available." << std::endl;
-	}
-#endif
-
 	std::cout << "[System] Waiting for controller connection via USB/BT..." << std::endl;
 	std::cout.flush();
 
@@ -586,14 +564,6 @@ void StartServiceThread()
 	{
 		g_AudioThread.join();
 	}
-
-#ifdef USE_VIGEM
-	if (g_ViGEmAdapter)
-	{
-		g_ViGEmAdapter->Shutdown();
-		g_ViGEmAdapter.reset();
-	}
-#endif
 
 	if (g_Registry)
 	{
@@ -719,6 +689,4 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	}
 	return TRUE;
 }
-
-#endif // _WIN32 && USE_VIGEM
 #endif
