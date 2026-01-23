@@ -1,5 +1,5 @@
 ﻿// Copyright (c) 2025 Rafael Valoto. All Rights Reserved.
-#define BUILD_GAMEPAD_CORE_TESTS 1
+#ifdef BUILD_GAMEPAD_CORE_TESTS
 #include "../../../Examples/Adapters/Tests/test_device_registry_policy.h"
 #include "GCore/Interfaces/IPlatformHardwareInfo.h"
 #include "GCore/Templates/TBasicDeviceRegistry.h"
@@ -96,3 +96,4 @@ int main()
 
 	return 0;
 }
+#endif
