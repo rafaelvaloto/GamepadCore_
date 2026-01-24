@@ -36,11 +36,24 @@ int main()
 	const int32_t TargetDeviceId = 0;
 	bool bWasConnected = false;
 
+#ifdef AUTOMATED_TESTS
+	std::cout << "[Test] Automated mode active. The test will end in 5s." << std::endl;
+	auto startTime = std::chrono::steady_clock::now();
+#endif
+
 	std::cout << "Reading analog buffers. Press Ctrl+C to stop." << std::endl;
 	std::cout << std::fixed << std::setprecision(3);
 
 	while (true)
 	{
+#ifdef AUTOMATED_TESTS
+		auto now = std::chrono::steady_clock::now();
+		if (std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count() >= 5)
+		{
+			std::cout << "\n[Test] Timeout reached (5s). Finishing..." << std::endl;
+			break;
+		}
+#endif
 		float DeltaTime = 0.016f;
 		Registry->PlugAndPlay(DeltaTime);
 
