@@ -11,13 +11,13 @@
 namespace FGamepadSensors
 {
 	inline void DualShockCalibrationSensors(const std::uint8_t* Buffer,
-	                                        FGamepadCalibration& OutCalibration, EDSDeviceConnection ConnectionType)
+	                                        FGamepadCalibration& OutCalibration,
+	                                        EDSDeviceConnection ConnectionType)
 	{
 		auto GetLE16 = [](const std::uint8_t* Data) -> std::int16_t {
 			return static_cast<std::int16_t>(Data[0] | (Data[1] << 8));
 		};
 
-		// All are now int16_t
 		const std::int16_t GyroPitchBias = GetLE16(&Buffer[1]);
 		const std::int16_t GyroYawBias = GetLE16(&Buffer[3]);
 		const std::int16_t GyroRollBias = GetLE16(&Buffer[5]);
@@ -43,10 +43,10 @@ namespace FGamepadSensors
 
 		const std::int16_t AccelXPlus = GetLE16(&Buffer[23]);
 		const std::int16_t AccelXMinus = GetLE16(&Buffer[25]);
-		const std::int16_t AccelYPlus = GetLE16(&Buffer[27]);
-		const std::int16_t AccelYMinus = GetLE16(&Buffer[29]);
-		const std::int16_t AccelZPlus = GetLE16(&Buffer[31]);
-		const std::int16_t AccelZMinus = GetLE16(&Buffer[33]);
+		const std::int16_t AccelZPlus = GetLE16(&Buffer[27]);
+		const std::int16_t AccelZMinus = GetLE16(&Buffer[29]);
+		const std::int16_t AccelYPlus = GetLE16(&Buffer[31]);
+		const std::int16_t AccelYMinus = GetLE16(&Buffer[33]);
 
 		OutCalibration.GyroBiasX = static_cast<float>(GyroPitchBias);
 		OutCalibration.GyroBiasY = static_cast<float>(GyroYawBias);
@@ -55,16 +55,17 @@ namespace FGamepadSensors
 		// Gyro Factors
 		// Using float to ensure precision in sum before division
 		const auto Speed2x = static_cast<float>(GyroSpeedPlus + GyroSpeedMinus);
+		const float GyroScale = 937.0f; // Typical speed used in DS4/DS5 factory calibration
 
 		// ABS logic works better now that they are int16
 		const auto DenomX = static_cast<float>(std::abs(GyroPitchPlus - GyroPitchBias) + std::abs(GyroPitchMinus - GyroPitchBias));
-		OutCalibration.GyroFactorX = (DenomX != 0.0f) ? (Speed2x / DenomX) : 1.0f;
+		OutCalibration.GyroFactorX = (DenomX != 0.0f) ? (Speed2x / DenomX) * (GyroScale / Speed2x) * 2.0f : 1.0f;
 
 		const auto DenomY = static_cast<float>(std::abs(GyroYawPlus - GyroYawBias) + std::abs(GyroYawMinus - GyroYawBias));
-		OutCalibration.GyroFactorY = (DenomY != 0.0f) ? (Speed2x / DenomY) : 1.0f;
+		OutCalibration.GyroFactorY = (DenomY != 0.0f) ? (Speed2x / DenomY) * (GyroScale / Speed2x) * 2.0f : 1.0f;
 
 		const auto DenomZ = static_cast<float>(std::abs(GyroRollPlus - GyroRollBias) + std::abs(GyroRollMinus - GyroRollBias));
-		OutCalibration.GyroFactorZ = (DenomZ != 0.0f) ? (Speed2x / DenomZ) : 1.0f;
+		OutCalibration.GyroFactorZ = (DenomZ != 0.0f) ? (Speed2x / DenomZ) * (GyroScale / Speed2x) * 2.0f : 1.0f;
 
 		// Acc X
 		// IMPORTANT: Now (XPlus - XMinus) will do the correct calculation: e.g.: 8192 - (-8192) = 16384
@@ -191,8 +192,8 @@ namespace FGamepadSensors
 		auto RawGyroZ = static_cast<std::int16_t>(Buffer[Offset + 4] | (Buffer[Offset + 5] << 8));
 
 		auto RawAccX = static_cast<std::int16_t>(Buffer[Offset + 6] | (Buffer[Offset + 7] << 8));
-		auto RawAccY = static_cast<std::int16_t>(Buffer[Offset + 8] | (Buffer[Offset + 9] << 8));
-		auto RawAccZ = static_cast<std::int16_t>(Buffer[Offset + 10] | (Buffer[Offset + 11] << 8));
+		auto RawAccZ = static_cast<std::int16_t>(Buffer[Offset + 8] | (Buffer[Offset + 9] << 8));
+		auto RawAccY = static_cast<std::int16_t>(Buffer[Offset + 10] | (Buffer[Offset + 11] << 8));
 
 		const auto fRawGyroX = static_cast<float>(RawGyroX);
 		const auto fRawGyroY = static_cast<float>(RawGyroY);
