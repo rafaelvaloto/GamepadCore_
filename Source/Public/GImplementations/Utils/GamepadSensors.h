@@ -38,8 +38,8 @@ namespace FGamepadSensors
 			GyroRollMinus = GetLE16(&Buffer[17]);
 		}
 
-		const std::int16_t GyroSpeedPlus = GetLE16(&Buffer[19]);
-		const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
+		// const std::int16_t GyroSpeedPlus = GetLE16(&Buffer[19]);
+		// const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
 
 		const std::int16_t AccelXPlus = GetLE16(&Buffer[23]);
 		const std::int16_t AccelXMinus = GetLE16(&Buffer[25]);
@@ -103,8 +103,8 @@ namespace FGamepadSensors
 		const std::int16_t GyroRollPlus = GetLE16(&Buffer[15]);
 		const std::int16_t GyroRollMinus = GetLE16(&Buffer[17]);
 
-		const std::int16_t GyroSpeedPlus = GetLE16(&Buffer[19]);
-		const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
+		// const std::int16_t GyroSpeedPlus = GetLE16(&Buffer[19]);
+		// const std::int16_t GyroSpeedMinus = GetLE16(&Buffer[21]);
 
 		const std::int16_t AccelXPlus = GetLE16(&Buffer[23]);
 		const std::int16_t AccelXMinus = GetLE16(&Buffer[25]);
